@@ -6,9 +6,19 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/db";
 import { useEffect } from "react";
 import { useChatRouter } from "@/lib/chatRouter";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "./ui/sidebar";
 
-export default function Sidebar() {
-  const { navigateToChat } = useChatRouter();
+export default function ChatSidebar() {
+  const { threadId, navigateToChat } = useChatRouter();
 
   const threads = useLiveQuery(() => {
     return chatDB.getAllThreads();
@@ -21,36 +31,42 @@ export default function Sidebar() {
   }, [threads]);
 
   return (
-    <nav className="hidden md:relative md:flex md:w-72 bg-sidebar text-sidebar-foreground border-sidebar-border border-r-2">
-      <div className="flex h-full flex-col w-full">
-        <div className="flex shirnk-0 items-center justify-between p-4">
+    <Sidebar>
+      <SidebarHeader className="flex py-2 shrink-0 items-center gap-2 border-b">
+        <div className="flex items-center justify-between w-full gap-2 px-3">
           <h1>Next Chat</h1>
-          <Button variant="ghost" onClick={() => navigateToChat("")}>
-            <NotebookPen className="w-4 h-4" />
+          <Button
+            variant="ghost"
+            className="w-7 h-7"
+            onClick={() => navigateToChat("")}
+          >
+            <NotebookPen />
           </Button>
         </div>
-        <div className="mt-2 flex-1 overflow-y-auto">
-          <ul role="list" className="flex flex-col">
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
             {threads?.map((thread) => (
-              <li key={thread.id} data-thread-id={thread.id}>
-                <Button
+              <SidebarMenuItem key={thread.id} data-thread-id={thread.id}>
+                <SidebarMenuButton
                   onClick={() => navigateToChat(thread.id)}
-                  variant="ghost"
+                  isActive={thread.id === threadId}
                   className="w-full justify-start"
                 >
                   <MessageSquare className="w-6 h-6" />
                   {thread.title}
-                </Button>
-              </li>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             ))}
-          </ul>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <div className="flex w-full items-center justify-center gap-3 p-4">
+          Juan
         </div>
-        <div>
-          <div className="flex w-full items-center justify-center gap-3 p-4">
-            Juan
-          </div>
-        </div>
-      </div>
-    </nav>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

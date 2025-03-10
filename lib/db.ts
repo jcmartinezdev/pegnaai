@@ -51,6 +51,10 @@ export class ChatDB extends Dexie {
       .sortBy("lastMessageAt");
   }
 
+  async getThread(threadId: string) {
+    return await this.threads.get(threadId);
+  }
+
   async getAllMessages(threadId: string) {
     return await this.messages
       .where("threadId")
@@ -97,7 +101,7 @@ export class ChatDB extends Dexie {
           content: "What is Next Chat?",
           model: "gpt-3",
           modelParams: {},
-          role: "system",
+          role: "user",
           createdAt: new Date(),
           status: "done",
         },
