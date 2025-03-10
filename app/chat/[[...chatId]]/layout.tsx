@@ -1,4 +1,7 @@
+"use client";
+
 import Sidebar from "@/components/sidebar";
+import { ChatRouterProvider } from "@/lib/chatRouter";
 
 export default function ChatLayout({
   children,
@@ -6,9 +9,11 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex h-dvh bg-background text-foreground">
-      <Sidebar />
-      {children}
-    </div>
+    <ChatRouterProvider>
+      <div className="relative flex h-dvh bg-background text-foreground">
+        <Sidebar />
+        {children}
+      </div>
+    </ChatRouterProvider>
   );
 }

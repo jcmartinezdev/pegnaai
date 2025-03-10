@@ -22,6 +22,7 @@ interface MessageModel {
   threadId: string;
   model: LlmModel;
   modelParams: ModelParams;
+  content: string;
   reasoning?: string;
   role: "assistant" | "user" | "system";
   createdAt: Date;
@@ -44,11 +45,18 @@ export class ChatDB extends Dexie {
   }
 
   async getAllThreads() {
-    console.log("lallaa", await this.threads.toArray());
     return await this.threads
       .where("status")
       .notEqual("deleted")
       .sortBy("lastMessageAt");
+  }
+
+  async getAllMessages(threadId: string) {
+    return await this.messages
+      .where("threadId")
+      .equals(threadId)
+      .and((message) => message.status !== "deleted")
+      .sortBy("createdAt");
   }
 
   async createThread(
@@ -69,9 +77,42 @@ export class ChatDB extends Dexie {
 
   async createrOnboardingThreads() {
     console.log("Creating onboarding threads");
-    return this.createThread({
-      title: "Welcome to Next Chat",
-      model: "gpt-3",
+    return this.transaction("rw", [this.threads, this.messages], async () => {
+      await this.threads.bulkAdd([
+        {
+          id: "welcome",
+          title: "Welcome to Next Chat",
+          model: "gpt-3",
+          pinned: false,
+          lastMessageAt: new Date(),
+          updatedAt: new Date(),
+          status: "active",
+        },
+      ]);
+
+      await this.messages.bulkAdd([
+        {
+          id: "welcome-1",
+          threadId: "welcome",
+          content: "What is Next Chat?",
+          model: "gpt-3",
+          modelParams: {},
+          role: "system",
+          createdAt: new Date(),
+          status: "done",
+        },
+        {
+          id: "welcome-2",
+          threadId: "welcome",
+          content:
+            "Next Chat is a chat app built with Next.js and Tailwind CSS.",
+          model: "gpt-3",
+          modelParams: {},
+          role: "assistant",
+          createdAt: new Date(),
+          status: "done",
+        },
+      ]);
     });
   }
 }
