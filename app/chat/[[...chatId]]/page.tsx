@@ -27,8 +27,8 @@ export default function ChatPage() {
           {thread?.title || "New Chat"}
         </div>
       </header>
-      <div className="relative flex w-full flex-1 flex-col">
-        <div className="flex-1 overflow-y-auto">
+      <div className="relative flex w-full flex-1 flex-col overflow-hidden">
+        <div className="overflow-y-auto pb-48">
           <div
             role="log"
             aria-label="Chat messages"
@@ -42,14 +42,14 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[80%] p-2 rounded-xl text-left p-2 ${message.role === "user" ? "bg-accent" : ""}`}
                 >
-                  {message.content}
+                  {message.content} - {message.status}
                 </div>
               </div>
             ))}
           </div>
         </div>
         <div className="absolute bottom-0 w-full pr-2">
-          <ChatForm />
+          <ChatForm threadId={threadId} />
         </div>
       </div>
     </>

@@ -1,23 +1,23 @@
 import Dexie, { type EntityTable } from "dexie";
 
-type LlmModel = string;
+export type LlmModel = string;
 
-type ModelParams = {
+export type ModelParams = {
   reasoningEffort?: string;
   includeSearch?: boolean;
 };
 
-interface ThreadModel {
+export interface ThreadModel {
   id: string;
   title: string;
   model: LlmModel;
   pinned: boolean;
   lastMessageAt: Date;
   updatedAt: Date;
-  status: "active" | "deleted" | "pending";
+  status: "active" | "deleted";
 }
 
-interface MessageModel {
+export interface MessageModel {
   id: string;
   threadId: string;
   model: LlmModel;
@@ -26,7 +26,7 @@ interface MessageModel {
   reasoning?: string;
   role: "assistant" | "user" | "system";
   createdAt: Date;
-  status: "done" | "deleted" | "streaming" | "cancelled";
+  status: "done" | "deleted" | "streaming" | "cancelled" | "error";
 }
 
 export class ChatDB extends Dexie {
@@ -75,7 +75,53 @@ export class ChatDB extends Dexie {
       pinned: false,
       lastMessageAt: new Date(),
       updatedAt: new Date(),
-      status: "pending",
+      status: "active",
+    });
+  }
+
+  async addMessage(message: Omit<MessageModel, "id" | "createdAt">) {
+    return this.transaction("rw", [this.threads, this.messages], async () => {
+      const date = new Date();
+      const newMessage = await this.messages.add({
+        ...message,
+        id: crypto.randomUUID(),
+        createdAt: date,
+      });
+
+      await chatDB.threads.update(message.threadId, {
+        model: message.model,
+        lastMessageAt: date,
+        updatedAt: date,
+      });
+
+      return newMessage;
+    });
+  }
+
+  async markMessageDone(
+    messageId: string,
+    threadId: string,
+    appendContent?: string,
+  ) {
+    return this.transaction("rw", [this.threads, this.messages], async () => {
+      const date = new Date();
+      if (appendContent) {
+        await this.messages.update(messageId, {
+          status: "done",
+          content:
+            ((await this.messages.get(messageId))?.content || "") +
+            appendContent,
+        });
+      } else {
+        await this.messages.update(messageId, {
+          status: "done",
+        });
+      }
+
+      await chatDB.threads.update(threadId, {
+        updatedAt: date,
+        status: "active",
+      });
     });
   }
 
