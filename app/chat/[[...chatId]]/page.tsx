@@ -1,6 +1,8 @@
 "use client";
 
+import ChatContent from "@/components/ChatContent";
 import ChatForm from "@/components/ChatForm";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useChatRouter } from "@/lib/chatRouter";
@@ -21,10 +23,12 @@ export default function ChatPage() {
   return (
     <>
       <header className="flex py-2 shrink-0 items-center gap-2 border-b">
-        <div className="flex items-center gap-2 px-3">
+        <div className="flex items-center gap-2 px-3 w-full">
           <SidebarTrigger />
           <Separator orientation="vertical" className="mr-2 h-4" />
           {thread?.title || "New Chat"}
+          <div className="flex-grow"></div>
+          <ThemeSwitcher />
         </div>
       </header>
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
@@ -42,7 +46,7 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[80%] p-2 rounded-xl text-left p-2 ${message.role === "user" ? "bg-accent" : ""}`}
                 >
-                  {message.content} - {message.status}
+                  <ChatContent content={message.content} />
                 </div>
               </div>
             ))}

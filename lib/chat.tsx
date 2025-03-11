@@ -67,7 +67,13 @@ export default async function askNextChat(
 
     for (let line of textDecoder.decode(value).split("\n").filter(Boolean)) {
       const op = line[0];
-      const content = line.slice(2).trim();
+      const contentLine = line.slice(2).trim();
+      let content = contentLine;
+      try {
+        content = JSON.parse(contentLine);
+      } catch (e) {
+        content = contentLine.replace(/^"|"$/g, "");
+      }
       console.log(`[${op}] ${content}`);
 
       const currentMessage = await chatDB.messages.get(responseMessageId);
@@ -75,6 +81,7 @@ export default async function askNextChat(
       switch (op) {
         case "0":
           // Text arrived
+
           await chatDB.messages.update(responseMessageId, {
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
