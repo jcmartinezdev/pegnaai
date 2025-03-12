@@ -1,6 +1,6 @@
 "use client";
 
-import Sidebar from "@/components/Sidebar";
+import ChatSidebar from "@/components/sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ChatRouterProvider } from "@/lib/chatRouter";
 
@@ -13,7 +13,7 @@ export default function ChatLayout({
     <ChatRouterProvider>
       <SidebarProvider>
         <div className="relative w-full flex h-dvh bg-background text-foreground">
-          <Sidebar />
+          <ChatSidebar />
           <SidebarInset>{children}</SidebarInset>
         </div>
       </SidebarProvider>

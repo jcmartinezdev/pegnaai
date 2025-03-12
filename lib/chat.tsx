@@ -65,13 +65,13 @@ export default async function askNextChat(
       break;
     }
 
-    for (let line of textDecoder.decode(value).split("\n").filter(Boolean)) {
+    for (const line of textDecoder.decode(value).split("\n").filter(Boolean)) {
       const op = line[0];
       const contentLine = line.slice(2).trim();
       let content = contentLine;
       try {
         content = JSON.parse(contentLine);
-      } catch (e) {
+      } catch {
         content = contentLine.replace(/^"|"$/g, "");
       }
       console.log(`[${op}] ${content}`);

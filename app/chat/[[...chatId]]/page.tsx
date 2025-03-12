@@ -1,8 +1,8 @@
 "use client";
 
-import ChatContent from "@/components/ChatContent";
-import ChatForm from "@/components/ChatForm";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import ChatContent from "@/components/chat-content";
+import ChatForm from "@/components/chat-form";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useChatRouter } from "@/lib/chatRouter";

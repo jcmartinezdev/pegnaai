@@ -2,9 +2,9 @@ import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  vsDark as lightTheme,
+  oneLight as lightTheme,
   a11yDark as darkTheme,
-} from "react-syntax-highlighter/dist/cjs/styles/prism";
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type Props = {
   content: string;
@@ -18,6 +18,7 @@ export default function ChatContent({ content }: Props) {
       <ReactMarkdown
         components={{
           code(props) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { children, className, node, ref, ...rest } = props;
             const match = /language-(\w+)/.exec(className || "");
 
@@ -30,11 +31,12 @@ export default function ChatContent({ content }: Props) {
                   <SyntaxHighlighter
                     {...rest}
                     PreTag="div"
-                    children={String(children).replace(/\n$/, "")}
                     language={match[1]}
                     style={theme === "light" ? lightTheme : darkTheme}
                     className="!bg-secondary !mt-0 !rounded-t-none"
-                  />
+                  >
+                    {String(children).replace(/\n$/, "")}
+                  </SyntaxHighlighter>
                 </div>
               );
             }

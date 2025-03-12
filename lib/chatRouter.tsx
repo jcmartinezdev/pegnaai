@@ -57,7 +57,7 @@ export const ChatRouterProvider = ({ children }: ChatRouterProviderProps) => {
     return () => {
       window.removeEventListener("popstate", handleLocationChange);
     };
-  }, []);
+  }, [threadIdFromPath]);
 
   return (
     <ChatRouterContext.Provider value={{ threadId, navigateToChat }}>
