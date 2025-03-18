@@ -55,6 +55,7 @@ export interface ThreadModel {
   id: string;
   title: string;
   model: LlmModel;
+  modelParams: ModelParams;
   pinned: boolean;
   lastMessageAt: Date;
   updatedAt: Date;
@@ -138,6 +139,7 @@ export class ChatDB extends Dexie {
 
       await chatDB.threads.update(message.threadId, {
         model: message.model,
+        modelParams: message.modelParams,
         lastMessageAt: date,
         updatedAt: date,
       });
@@ -168,19 +170,19 @@ export class ChatDB extends Dexie {
 
       await chatDB.threads.update(threadId, {
         updatedAt: date,
+        lastMessageAt: date,
         status: "active",
       });
     });
   }
 
   async createrOnboardingThreads() {
-    console.log("Creating onboarding threads");
     return this.transaction("rw", [this.threads, this.messages], async () => {
       await this.threads.bulkAdd([
         {
           id: "welcome",
           title: "Welcome to Next Chat",
-          model: "gpt-3",
+          model: "fast",
           pinned: false,
           lastMessageAt: new Date(),
           updatedAt: new Date(),
@@ -193,7 +195,7 @@ export class ChatDB extends Dexie {
           id: "welcome-1",
           threadId: "welcome",
           content: "What is Next Chat?",
-          model: "gpt-3",
+          model: "fast",
           modelParams: {},
           role: "user",
           createdAt: new Date(),
@@ -204,7 +206,7 @@ export class ChatDB extends Dexie {
           threadId: "welcome",
           content:
             "Next Chat is a chat app built with Next.js and Tailwind CSS.",
-          model: "gpt-3",
+          model: "fast",
           modelParams: {},
           role: "assistant",
           createdAt: new Date(),

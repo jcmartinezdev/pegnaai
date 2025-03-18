@@ -9,9 +9,12 @@ import { ModelPicker } from "./model-picker";
 import { FormField } from "./ui/form";
 import { Tooltip, TooltipProvider } from "./ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
+import { useEffect } from "react";
 
 type Props = {
   threadId: string;
+  defaultModel?: LlmModel;
+  defaultModelParams?: ModelParams;
 };
 
 type ChatFormInputs = {
@@ -20,11 +23,25 @@ type ChatFormInputs = {
   content: string;
 };
 
-export default function ChatForm({ threadId }: Props) {
-  const { register, handleSubmit, control, reset, watch } =
+export default function ChatForm({
+  threadId,
+  defaultModel,
+  defaultModelParams,
+}: Props) {
+  const { register, handleSubmit, control, reset, watch, setValue } =
     useForm<ChatFormInputs>({
-      defaultValues: { model: "fast", modelParams: {} },
+      defaultValues: {
+        model: defaultModel || "fast",
+        modelParams: defaultModelParams || {},
+      },
     });
+
+  useEffect(() => {
+    setValue("model", defaultModel || "fast");
+    if (defaultModelParams) {
+      setValue("modelParams", defaultModelParams);
+    }
+  }, [defaultModel, defaultModelParams]);
 
   const { navigateToChat } = useChatRouter();
 
@@ -36,10 +53,10 @@ export default function ChatForm({ threadId }: Props) {
       const newThreadId = await chatDB.createThread({
         title: "New Chat",
         model: data.model,
+        modelParams: data.modelParams,
       });
 
       saveThreadId = newThreadId;
-
       navigateToChat(newThreadId);
     }
 
@@ -60,7 +77,10 @@ export default function ChatForm({ threadId }: Props) {
       messages: await chatDB.getAllMessages(saveThreadId),
     });
 
-    reset();
+    reset({
+      ...data,
+      content: "",
+    });
   };
 
   const currentModel = models[watch("model")];

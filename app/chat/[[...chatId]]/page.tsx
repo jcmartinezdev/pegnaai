@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useChatRouter } from "@/lib/chatRouter";
 import { chatDB } from "@/lib/db";
+import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 
 export default function ChatPage() {
@@ -41,19 +42,31 @@ export default function ChatPage() {
             {messages?.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                className={cn([
+                  `flex ${message.role === "user" ? "justify-end" : "justify-start"}`,
+                  message.status === "error" &&
+                    "bg-red-500/5 text-red-800 dark:text-red-200",
+                ])}
               >
                 <div
                   className={`max-w-[80%] p-2 rounded-xl text-left p-2 ${message.role === "user" ? "bg-accent" : ""}`}
                 >
-                  <ChatContent content={message.content} />
+                  {message.status == "error" ? (
+                    <div>{message.content}</div>
+                  ) : (
+                    <ChatContent content={message.content} />
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
         <div className="absolute bottom-0 w-full pr-2">
-          <ChatForm threadId={threadId} />
+          <ChatForm
+            threadId={threadId}
+            defaultModel={thread?.model}
+            defaultModelParams={thread?.modelParams}
+          />
         </div>
       </div>
     </>
