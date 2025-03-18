@@ -2,35 +2,40 @@ import askNextChat from "@/lib/chat";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { chatDB } from "@/lib/db";
+import { chatDB, LlmModel, ModelParams, models } from "@/lib/db";
 import { useChatRouter } from "@/lib/chatRouter";
+import { Brain, Globe, Send } from "lucide-react";
+import { ModelPicker } from "./model-picker";
+import { FormField } from "./ui/form";
+import { Tooltip, TooltipProvider } from "./ui/tooltip";
+import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 
 type Props = {
   threadId: string;
 };
 
 type ChatFormInputs = {
+  model: LlmModel;
+  modelParams: ModelParams;
   content: string;
 };
 
 export default function ChatForm({ threadId }: Props) {
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { isValid },
-  } = useForm<ChatFormInputs>();
+  const { register, handleSubmit, control, reset, watch } =
+    useForm<ChatFormInputs>({
+      defaultValues: { model: "fast", modelParams: {} },
+    });
+
   const { navigateToChat } = useChatRouter();
 
   const onSubmit: SubmitHandler<ChatFormInputs> = async (data) => {
-    const model = "gpt-4o";
     const modelParams = {};
     let saveThreadId = threadId;
 
     if (!saveThreadId) {
       const newThreadId = await chatDB.createThread({
         title: "New Chat",
-        model,
+        model: data.model,
       });
 
       saveThreadId = newThreadId;
@@ -44,13 +49,13 @@ export default function ChatForm({ threadId }: Props) {
       content: data.content,
       role: "user",
       status: "done",
-      model,
+      model: data.model,
       modelParams,
     });
 
     askNextChat({
       threadId: saveThreadId,
-      model,
+      model: data.model,
       modelParams,
       messages: await chatDB.getAllMessages(saveThreadId),
     });
@@ -58,13 +63,15 @@ export default function ChatForm({ threadId }: Props) {
     reset();
   };
 
+  const currentModel = models[watch("model")];
+
   return (
     <form
-      className="mx-auto max-w-4xl bg-accent rounded-t-xl border-2 border-b-0 py-2 shadow-lg"
+      className="mx-auto max-w-4xl bg-accent rounded-t-xl border-2 border-b-0 p-3 shadow-lg"
       onSubmit={handleSubmit(onSubmit)}
     >
       <Textarea
-        className="focus-visible:ring-0 border-0 shadow-none"
+        className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0"
         placeholder="Ask me anything..."
         onKeyDown={(e) => {
           if (!e.nativeEvent.isComposing && "Enter" === e.key && !e.shiftKey) {
@@ -77,9 +84,95 @@ export default function ChatForm({ threadId }: Props) {
         }}
         {...register("content", { required: true })}
       />
-      <Button type="submit" disabled={!isValid}>
-        Send
-      </Button>
+      <div className="flex items-center">
+        <div className="flex gap-2">
+          <FormField
+            control={control}
+            name="model"
+            render={({ field }) => (
+              <ModelPicker
+                selectedModel={field.value}
+                onSelectModel={field.onChange}
+              />
+            )}
+          />
+          {currentModel.allowSearch && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <FormField
+                      control={control}
+                      name="modelParams.includeSearch"
+                      render={({ field }) => (
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => field.onChange(!field.value)}
+                        >
+                          <Globe
+                            className={`size-5 ${field.value ? "text-blue-600/70" : ""}`}
+                          />
+                        </Button>
+                      )}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
+                    Search the web to provide better answers.
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {currentModel.allowReasoning && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <FormField
+                      control={control}
+                      name="modelParams.reasoningEffort"
+                      render={({ field }) => (
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            field.onChange(
+                              field.value === "high" ? "low" : "high",
+                            )
+                          }
+                        >
+                          <Brain
+                            className={`size-5 ${field.value === "high" ? "text-blue-600/70" : ""}`}
+                          />
+                        </Button>
+                      )}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
+                    Think harder before answering.
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+        <div className="flex-grow"></div>
+        <Button
+          type="submit"
+          variant="outline"
+          size="icon"
+          className="rounded-full bg-blue-600/70 p-2 text-neutral-100 hover:text-neutral-100 hover:bg-blue-500/70"
+        >
+          <Send className="size-5 -ml-0.5 -mb-0.5" />
+        </Button>
+      </div>
     </form>
   );
 }

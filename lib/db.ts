@@ -1,9 +1,53 @@
 import Dexie, { type EntityTable } from "dexie";
 
-export type LlmModel = string;
+export type LlmModel = "fast" | "balanced" | "powerful" | "code";
+
+type ModelType = {
+  name: string;
+  provider: "openai" | "google" | "anthropic";
+  description: string;
+  actualModel: string;
+  allowSearch: boolean;
+  allowReasoning: boolean;
+};
+
+export const models: Record<LlmModel, ModelType> = {
+  fast: {
+    name: "Super Fast",
+    description: "Optimized for speed and good accuracy.",
+    provider: "google",
+    actualModel: "Gemini Flash",
+    allowSearch: true,
+    allowReasoning: true,
+  },
+  balanced: {
+    name: "Balanced",
+    description: "Good balance between speed and capabilities.",
+    provider: "openai",
+    actualModel: "o3-mini",
+    allowSearch: true,
+    allowReasoning: true,
+  },
+  powerful: {
+    name: "Powerful",
+    description: "Cutting-edge capabilities, top of the line model.",
+    provider: "openai",
+    actualModel: "GPT 4o",
+    allowSearch: false,
+    allowReasoning: false,
+  },
+  code: {
+    name: "Code",
+    description: "Code completion and generation.",
+    provider: "anthropic",
+    actualModel: "Claude Sonnet 3.7",
+    allowSearch: false,
+    allowReasoning: false,
+  },
+};
 
 export type ModelParams = {
-  reasoningEffort?: string;
+  reasoningEffort?: "low" | "high";
   includeSearch?: boolean;
 };
 
@@ -24,6 +68,10 @@ export interface MessageModel {
   modelParams: ModelParams;
   content: string;
   reasoning?: string;
+  serverError?: {
+    message: string;
+    type: string;
+  };
   role: "assistant" | "user" | "system";
   createdAt: Date;
   status: "done" | "deleted" | "streaming" | "cancelled" | "error";

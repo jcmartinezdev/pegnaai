@@ -1,12 +1,21 @@
 import { chatDB, LlmModel, ModelParams } from "./db";
 
+interface FinishedStreamType {
+  finishReason?: "stop" | "length" | "content-filter" | "error";
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+  };
+  isContinued?: boolean;
+}
+
 export interface AskMessagesModel {
   id: string;
   content: string;
   role: "assistant" | "user" | "system";
 }
 
-interface AskModel {
+export interface AskModel {
   threadId: string;
   model: LlmModel;
   modelParams: ModelParams;
@@ -21,16 +30,33 @@ interface ResponseModel {
 export default async function askNextChat(
   ask: AskModel,
 ): Promise<ResponseModel> {
+  const responseMessageId = await chatDB.addMessage({
+    threadId: ask.threadId,
+    content: "",
+    role: "assistant",
+    status: "streaming",
+    model: ask.model,
+    modelParams: ask.modelParams,
+  });
+
   const response = await fetch("/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(ask),
+    body: JSON.stringify({ ...ask }),
   });
 
   if (!response.ok) {
     console.error("[STREAM] Failed to fetch response", response);
+
+    const result = await response.json();
+    await chatDB.messages.update(responseMessageId, {
+      status: "error",
+      content: "Failed to fetch response",
+      serverError: result,
+    });
+
     return {
       success: false,
       error: "Failed to fetch response",
@@ -42,21 +68,21 @@ export default async function askNextChat(
 
   if (!reader) {
     console.error("[STREAM] Failed to read response", response);
+
+    await chatDB.messages.update(responseMessageId, {
+      status: "error",
+      content: "Failed to read response",
+      serverError: {
+        message: "No reader available from response.",
+        type: "no_reader",
+      },
+    });
+
     return {
       success: false,
       error: "No reader available from response.",
     };
   }
-
-  const responseMessageId = await chatDB.addMessage({
-    threadId: ask.threadId,
-    content: "",
-    role: "assistant",
-    status: "streaming",
-    model: ask.model,
-    modelParams: ask.modelParams,
-  });
-
   const textDecoder = new TextDecoder();
 
   while (true) {
@@ -81,7 +107,6 @@ export default async function askNextChat(
       switch (op) {
         case "0":
           // Text arrived
-
           await chatDB.messages.update(responseMessageId, {
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
@@ -89,10 +114,19 @@ export default async function askNextChat(
           });
           break;
 
+        case "3":
+          // Text arrived
+          await chatDB.messages.update(responseMessageId, {
+            content:
+              (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
+            status: "error",
+          });
+          break;
+
         case "d":
           // Done
           try {
-            const data = JSON.parse(content);
+            const data = content as FinishedStreamType;
             const finishReason = data.finishReason || "unknown";
 
             switch (finishReason) {
@@ -116,6 +150,7 @@ export default async function askNextChat(
               case "error":
                 await chatDB.messages.update(responseMessageId, {
                   status: "error",
+                  content: "Error processing the request. Please try again.",
                 });
                 return {
                   success: false,
@@ -124,6 +159,7 @@ export default async function askNextChat(
               default:
                 await chatDB.messages.update(responseMessageId, {
                   status: "error",
+                  content: "Error processing the request. Please try again.",
                 });
                 return {
                   success: false,
@@ -132,6 +168,14 @@ export default async function askNextChat(
             }
           } catch (error) {
             console.error("[STREAM] Error parsing data chunk JSON:", error);
+            await chatDB.messages.update(responseMessageId, {
+              status: "error",
+              content: "Error processing the request. Please try again.",
+            });
+            return {
+              success: false,
+              error: "Error parsing data chunk JSON",
+            };
           }
           break;
       }
