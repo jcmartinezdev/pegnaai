@@ -65,13 +65,13 @@ export function ModelPicker({
             onClick={() => onSelectModel(key as LlmModel)}
           >
             <div className="mt-0.5">{getIcon(key as LlmModel)}</div>
-            <div>
+            <div className="flex-grow">
               <div className="font-medium">{model.name}</div>
               <div className="text-sm text-muted-foreground">
                 {model.description}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex gap-2 w-18 flex-none items-center justify-end">
               {model.allowSearch && (
                 <TooltipProvider>
                   <Tooltip>
@@ -83,6 +83,22 @@ export function ModelPicker({
                     <TooltipContent>
                       <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
                         This model supports searching the web.
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {model.allowReasoning && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div>
+                        <Brain className="h-5 w-5" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
+                        This model supports high reasoning.
                       </div>
                     </TooltipContent>
                   </Tooltip>
