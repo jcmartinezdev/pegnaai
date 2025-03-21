@@ -16,9 +16,9 @@ export const models: Record<LlmModel, ModelType> = {
     name: "Super Fast",
     description: "Optimized for speed and good accuracy.",
     provider: "google",
-    actualModel: "Gemini Flash",
+    actualModel: "gemini-2.0-flash",
     allowSearch: true,
-    allowReasoning: true,
+    allowReasoning: false,
   },
   balanced: {
     name: "Balanced",
@@ -51,6 +51,15 @@ export type ModelParams = {
   includeSearch?: boolean;
 };
 
+export type SearchMetadata = {
+  confidenceScore?: number;
+  source?: {
+    url: string;
+    title: string;
+  };
+  snippet: string;
+};
+
 export interface ThreadModel {
   id: string;
   title: string;
@@ -69,6 +78,7 @@ export interface MessageModel {
   modelParams: ModelParams;
   content: string;
   reasoning?: string;
+  searchMetadata?: SearchMetadata[];
   serverError?: {
     message: string;
     type: string;
@@ -173,46 +183,6 @@ export class ChatDB extends Dexie {
         lastMessageAt: date,
         status: "active",
       });
-    });
-  }
-
-  async createrOnboardingThreads() {
-    return this.transaction("rw", [this.threads, this.messages], async () => {
-      await this.threads.bulkAdd([
-        {
-          id: "welcome",
-          title: "Welcome to Next Chat",
-          model: "fast",
-          pinned: false,
-          lastMessageAt: new Date(),
-          updatedAt: new Date(),
-          status: "active",
-        },
-      ]);
-
-      await this.messages.bulkAdd([
-        {
-          id: "welcome-1",
-          threadId: "welcome",
-          content: "What is Next Chat?",
-          model: "fast",
-          modelParams: {},
-          role: "user",
-          createdAt: new Date(),
-          status: "done",
-        },
-        {
-          id: "welcome-2",
-          threadId: "welcome",
-          content:
-            "Next Chat is a chat app built with Next.js and Tailwind CSS.",
-          model: "fast",
-          modelParams: {},
-          role: "assistant",
-          createdAt: new Date(),
-          status: "done",
-        },
-      ]);
     });
   }
 }

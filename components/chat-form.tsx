@@ -10,6 +10,7 @@ import { FormField } from "./ui/form";
 import { Tooltip, TooltipProvider } from "./ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   threadId: string;
@@ -73,7 +74,7 @@ export default function ChatForm({
     askNextChat({
       threadId: saveThreadId,
       model: data.model,
-      modelParams,
+      modelParams: data.modelParams,
       messages: await chatDB.getAllMessages(saveThreadId),
     });
 
@@ -90,20 +91,29 @@ export default function ChatForm({
       className="mx-auto max-w-4xl bg-accent rounded-t-xl border-2 border-b-0 p-3 shadow-lg"
       onSubmit={handleSubmit(onSubmit)}
     >
-      <Textarea
-        className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0"
-        placeholder="Ask me anything..."
-        onKeyDown={(e) => {
-          if (!e.nativeEvent.isComposing && "Enter" === e.key && !e.shiftKey) {
-            e.preventDefault();
-            const form = e.currentTarget.form;
-            if (form) {
-              form.requestSubmit();
+      <div className="flex items-start">
+        <Textarea
+          className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0 min-h-10"
+          placeholder="Ask me anything..."
+          onKeyDown={(e) => {
+            if (
+              !e.nativeEvent.isComposing &&
+              "Enter" === e.key &&
+              !e.shiftKey
+            ) {
+              e.preventDefault();
+              const form = e.currentTarget.form;
+              if (form) {
+                form.requestSubmit();
+              }
             }
-          }
-        }}
-        {...register("content", { required: true })}
-      />
+          }}
+          {...register("content", { required: true })}
+        />
+        <Button type="submit" variant="default" size="icon">
+          <Send className="size-5 -ml-0.5 -mb-0.5" />
+        </Button>
+      </div>
       <div className="flex items-center">
         <div className="flex gap-2">
           <FormField
@@ -126,14 +136,18 @@ export default function ChatForm({
                       name="modelParams.includeSearch"
                       render={({ field }) => (
                         <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
+                          type="button"
+                          variant="default"
+                          className={cn(
+                            "hover:bg-blue-600/10 hover:text-blue-600",
+                            field.value
+                              ? "bg-blue-600/10 text-blue-600"
+                              : "bg-transparent text-primary",
+                          )}
                           onClick={() => field.onChange(!field.value)}
                         >
-                          <Globe
-                            className={`size-5 ${field.value ? "text-blue-600/70" : ""}`}
-                          />
+                          <Globe />
+                          Search
                         </Button>
                       )}
                     />
@@ -157,18 +171,22 @@ export default function ChatForm({
                       name="modelParams.reasoningEffort"
                       render={({ field }) => (
                         <Button
-                          type="submit"
-                          variant="ghost"
-                          size="icon"
+                          type="button"
+                          variant="default"
+                          className={cn(
+                            "hover:bg-blue-600/10 hover:text-blue-600",
+                            field.value === "high"
+                              ? "bg-blue-600/10 text-blue-600"
+                              : "bg-transparent text-primary",
+                          )}
                           onClick={() =>
                             field.onChange(
                               field.value === "high" ? "low" : "high",
                             )
                           }
                         >
-                          <Brain
-                            className={`size-5 ${field.value === "high" ? "text-blue-600/70" : ""}`}
-                          />
+                          <Brain />
+                          Think Hard
                         </Button>
                       )}
                     />
@@ -183,15 +201,6 @@ export default function ChatForm({
             </TooltipProvider>
           )}
         </div>
-        <div className="flex-grow"></div>
-        <Button
-          type="submit"
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-blue-600/70 p-2 text-neutral-100 hover:text-neutral-100 hover:bg-blue-500/70"
-        >
-          <Send className="size-5 -ml-0.5 -mb-0.5" />
-        </Button>
       </div>
     </form>
   );

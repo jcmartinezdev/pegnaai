@@ -3,15 +3,18 @@
 import ChatContent from "@/components/chat-content";
 import ChatForm from "@/components/chat-form";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useChatRouter } from "@/lib/chatRouter";
 import { chatDB } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
+import { Plus } from "lucide-react";
 
 export default function ChatPage() {
-  const { threadId } = useChatRouter();
+  const { threadId, navigateToChat } = useChatRouter();
+  const { state, isMobile } = useSidebar();
 
   const thread = useLiveQuery(() => {
     return chatDB.getThread(threadId);
@@ -25,8 +28,19 @@ export default function ChatPage() {
     <>
       <header className="flex py-2 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center gap-2 px-3 w-full">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="mr-2 h-4" />
+          {(state === "collapsed" || isMobile) && (
+            <>
+              <SidebarTrigger />
+              <Button
+                variant="ghost"
+                className="w-7 h-7"
+                onClick={() => navigateToChat("")}
+              >
+                <Plus />
+              </Button>
+              <Separator orientation="vertical" className="mr-2 h-4" />
+            </>
+          )}
           {thread?.title || "New Chat"}
           <div className="flex-grow"></div>
           <ThemeSwitcher />
@@ -54,14 +68,17 @@ export default function ChatPage() {
                   {message.status == "error" ? (
                     <div>{message.content}</div>
                   ) : (
-                    <ChatContent content={message.content} />
+                    <ChatContent
+                      content={message.content}
+                      searchMetadata={message.searchMetadata}
+                    />
                   )}
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="absolute bottom-0 w-full pr-2">
+        <div className="absolute bottom-0 w-full px-4">
           <ChatForm
             threadId={threadId}
             defaultModel={thread?.model}

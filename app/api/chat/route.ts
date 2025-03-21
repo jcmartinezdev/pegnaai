@@ -1,9 +1,30 @@
-import { models, LlmModel, ModelParams } from "@/lib/db";
+import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/db";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { streamText } from "ai";
+import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
+import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
 import { AskMessagesModel, AskModel } from "@/lib/chat";
+
+function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
+  const llmModel = models[selectedModel];
+  switch (llmModel.provider) {
+    case "openai":
+      return {
+        model: openai(llmModel.actualModel),
+      };
+    case "google":
+      return {
+        model: google(llmModel.actualModel, {
+          useSearchGrounding: modelParams?.includeSearch || false,
+        }),
+      };
+    case "anthropic":
+      return {
+        model: anthropic(llmModel.actualModel),
+      };
+  }
+}
 
 const askModelSchema = z.object({
   threadId: z.string(),
@@ -12,6 +33,7 @@ const askModelSchema = z.object({
     reasoningEffort: z.enum(["low", "high"] as const).optional(),
     includeSearch: z.boolean().optional(),
   }) satisfies z.ZodType<ModelParams>,
+  generateTitle: z.boolean().optional(),
   messages: z.array(
     z.object({
       id: z.string(),
@@ -31,25 +53,73 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { threadId, model, modelParams, messages } = data;
+  const { model, modelParams, messages, generateTitle } = data;
 
-  const llmModel = models[model];
+  let generatedTitle: string | undefined = undefined;
+  if (generateTitle) {
+    // Generate the chat title
+    const { text: title } = await generateText({
+      model: google("gemini-2.0-flash"),
+      system: `\n
+    - you will generate a short title based on the message
+    - you will ensure the title is less than 80 characters
+    - you will ensure the title is a single sentence
+    - you will ensure the title is a summary of the user's message
+    - you will not use quotes, colons, slashes.`,
+      prompt: messages[0].content,
+    });
+    generatedTitle = title;
+  }
 
-  const getModel = () => {
-    switch (llmModel.provider) {
-      case "openai":
-        return openai(llmModel.actualModel);
-      case "anthropic":
-        return anthropic(llmModel.actualModel);
-    }
+  return createDataStreamResponse({
+    execute: (dataStream) => {
+      if (generatedTitle) {
+        dataStream.writeData({ type: "thread-metadata", generatedTitle });
+      }
 
-    return openai(llmModel.actualModel);
-  };
+      const result = streamText({
+        ...getModel(model, modelParams),
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        onFinish: ({ providerMetadata }) => {
+          const googleMetadata = providerMetadata?.google as
+            | GoogleGenerativeAIProviderMetadata
+            | undefined;
 
-  const result = streamText({
-    model: getModel(),
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          if (googleMetadata) {
+            if (
+              googleMetadata.groundingMetadata &&
+              googleMetadata.groundingMetadata.groundingSupports
+            ) {
+              const searchMetadata: SearchMetadata[] =
+                googleMetadata.groundingMetadata.groundingSupports.map((gs) => {
+                  const gc =
+                    googleMetadata.groundingMetadata?.groundingChunks?.[
+                      gs.groundingChunkIndices?.[0] || 0
+                    ];
+                  return {
+                    confidenceScore: gs.confidenceScores?.[0] || undefined,
+                    source: (gc?.web || gc?.retrievedContext || undefined) && {
+                      url: gc?.web?.uri || gc?.retrievedContext?.uri || "",
+                      title:
+                        gc?.web?.title || gc?.retrievedContext?.title || "",
+                    },
+                    snippet: gs.segment?.text || "",
+                  };
+                });
+              dataStream.writeData({
+                type: "search-metadata",
+                value: searchMetadata,
+              });
+            }
+          }
+        },
+      });
+
+      result.mergeIntoDataStream(dataStream);
+    },
+    onError: (error) => {
+      console.log("Error", error);
+      return "There was an error with the request";
+    },
   });
-
-  return result.toDataStreamResponse();
 }

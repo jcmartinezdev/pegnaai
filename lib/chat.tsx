@@ -1,4 +1,14 @@
-import { chatDB, LlmModel, ModelParams } from "./db";
+import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./db";
+
+type CustomMetadataType =
+  | {
+      type: "thread-metadata";
+      title: string;
+    }
+  | {
+      type: "search-metadata";
+      value: SearchMetadata[];
+    };
 
 interface FinishedStreamType {
   finishReason?: "stop" | "length" | "content-filter" | "error";
@@ -100,13 +110,13 @@ export default async function askNextChat(
       } catch {
         content = contentLine.replace(/^"|"$/g, "");
       }
-      console.log(`[${op}] ${content}`);
 
       const currentMessage = await chatDB.messages.get(responseMessageId);
 
       switch (op) {
         case "0":
           // Text arrived
+          console.log(`[STREAM][${op}]:`, content);
           await chatDB.messages.update(responseMessageId, {
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
@@ -114,8 +124,36 @@ export default async function askNextChat(
           });
           break;
 
+        case "2":
+          // Custom data arrived
+          try {
+            if (typeof content === "object") {
+              for (let o of content as []) {
+                const data = o as CustomMetadataType;
+                console.log(`[STREAM][${op}]:`, data);
+                switch (data.type) {
+                  case "thread-metadata":
+                    await chatDB.threads.update(ask.threadId, {
+                      title: data.title,
+                    });
+                    break;
+                  case "search-metadata":
+                    await chatDB.messages.update(responseMessageId, {
+                      searchMetadata: data.value,
+                    });
+                    break;
+                }
+                break;
+              }
+            }
+          } catch (error) {
+            console.error("[STREAM] Error parsing data chunk JSON:", error);
+          }
+          break;
+
         case "3":
-          // Text arrived
+          // Ups... something went wrong
+          console.log(`[STREAM][${op}]:`, content);
           await chatDB.messages.update(responseMessageId, {
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
@@ -127,6 +165,7 @@ export default async function askNextChat(
           // Done
           try {
             const data = content as FinishedStreamType;
+            console.log(`[STREAM][${op}]:`, data);
             const finishReason = data.finishReason || "unknown";
 
             switch (finishReason) {
