@@ -68,10 +68,7 @@ export default function ChatPage() {
                   {message.status == "error" ? (
                     <div>{message.content}</div>
                   ) : (
-                    <ChatContent
-                      content={message.content}
-                      searchMetadata={message.searchMetadata}
-                    />
+                    <ChatContent message={message} />
                   )}
                 </div>
               </div>

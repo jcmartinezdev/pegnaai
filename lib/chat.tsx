@@ -124,6 +124,16 @@ export default async function askNextChat(
           });
           break;
 
+        case "g":
+          // Reasoning arrived
+          console.log(`[STREAM][${op}]:`, content);
+          await chatDB.messages.update(responseMessageId, {
+            reasoning:
+              (currentMessage?.reasoning || "") + content.replace(/^"|"$/g, ""),
+            status: "streaming",
+          });
+          break;
+
         case "2":
           // Custom data arrived
           try {

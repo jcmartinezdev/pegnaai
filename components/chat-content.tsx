@@ -1,4 +1,4 @@
-import { SearchMetadata } from "@/lib/db";
+import { MessageModel, SearchMetadata } from "@/lib/db";
 import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -8,18 +8,41 @@ import {
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
+import { Collapsible, CollapsibleContent } from "@radix-ui/react-collapsible";
+import { CollapsibleTrigger } from "./ui/collapsible";
+import { Button } from "./ui/button";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 type Props = {
-  content: string;
-  searchMetadata?: SearchMetadata[];
+  message: MessageModel;
 };
 
-export default function ChatContent({ content, searchMetadata }: Props) {
+export default function ChatContent({
+  message: { content, reasoning, searchMetadata, status },
+}: Props) {
   const { theme } = useTheme();
 
   return (
     <div>
       <div className="prose dark:prose-invert prose-pre:m-0 prose-pre:bg-transparent prose-pre:p-0">
+        {reasoning && (
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button variant="link" size="sm">
+                Reasoning
+                <ChevronDown />
+                {status === "streaming" && (
+                  <Loader2 className="animate-spin h-4 w-4" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Card className="bg-accent">
+                <CardContent>{reasoning}</CardContent>
+              </Card>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
         <ReactMarkdown
           components={{
             code(props) {
@@ -100,6 +123,12 @@ export default function ChatContent({ content, searchMetadata }: Props) {
             </ul>
           </CardContent>
         </Card>
+      )}
+      {status === "streaming" && (
+        <div className="mt-4 flex text-sm gap-2 items-center text-muted-foreground">
+          <Loader2 className="animate-spin h-4 w-4" />
+          Generating answer...
+        </div>
       )}
     </div>
   );

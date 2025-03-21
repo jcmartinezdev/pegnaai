@@ -25,7 +25,7 @@ export const models: Record<LlmModel, ModelType> = {
     description: "Good balance between speed and capabilities.",
     provider: "openai",
     actualModel: "o3-mini",
-    allowSearch: true,
+    allowSearch: false,
     allowReasoning: true,
   },
   powerful: {
@@ -40,9 +40,9 @@ export const models: Record<LlmModel, ModelType> = {
     name: "Code",
     description: "Code completion and generation.",
     provider: "anthropic",
-    actualModel: "Claude Sonnet 3.7",
+    actualModel: "claude-3-7-sonnet-20250219",
     allowSearch: false,
-    allowReasoning: false,
+    allowReasoning: true,
   },
 };
 

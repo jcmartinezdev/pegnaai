@@ -1,6 +1,6 @@
 import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/db";
 import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { anthropic, AnthropicProvider } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
@@ -11,7 +11,11 @@ function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
   switch (llmModel.provider) {
     case "openai":
       return {
-        model: openai(llmModel.actualModel),
+        model: openai(llmModel.actualModel, {
+          reasoningEffort: llmModel.allowReasoning
+            ? modelParams?.reasoningEffort || "medium"
+            : undefined,
+        }),
       };
     case "google":
       return {
@@ -21,7 +25,17 @@ function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
       };
     case "anthropic":
       return {
-        model: anthropic(llmModel.actualModel),
+        model: anthropic(llmModel.actualModel, {
+          sendReasoning: true,
+        }),
+        providerOptions: {
+          anthropic: {
+            thinking: modelParams?.reasoningEffort === "high" && {
+              type: "enabled",
+              budgetTokens: 2000,
+            },
+          },
+        },
       };
   }
 }
@@ -81,6 +95,7 @@ export async function POST(req: Request) {
         ...getModel(model, modelParams),
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         onFinish: ({ providerMetadata }) => {
+          console.log("Provider metadata", providerMetadata);
           const googleMetadata = providerMetadata?.google as
             | GoogleGenerativeAIProviderMetadata
             | undefined;
@@ -115,7 +130,9 @@ export async function POST(req: Request) {
         },
       });
 
-      result.mergeIntoDataStream(dataStream);
+      result.mergeIntoDataStream(dataStream, {
+        sendReasoning: true,
+      });
     },
     onError: (error) => {
       console.log("Error", error);
