@@ -36,7 +36,7 @@ function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
                     type: "enabled",
                     budgetTokens: 2000,
                   }
-                : undefined,
+                : { type: "disabled" },
           },
         },
       };
