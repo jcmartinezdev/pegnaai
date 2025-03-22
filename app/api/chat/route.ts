@@ -1,6 +1,6 @@
 import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/db";
 import { openai } from "@ai-sdk/openai";
-import { anthropic, AnthropicProvider } from "@ai-sdk/anthropic";
+import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
@@ -30,10 +30,13 @@ function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
         }),
         providerOptions: {
           anthropic: {
-            thinking: modelParams?.reasoningEffort === "high" && {
-              type: "enabled",
-              budgetTokens: 2000,
-            },
+            thinking:
+              modelParams?.reasoningEffort === "high"
+                ? {
+                    type: "enabled",
+                    budgetTokens: 2000,
+                  }
+                : undefined,
           },
         },
       };

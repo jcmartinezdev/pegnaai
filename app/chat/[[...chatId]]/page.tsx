@@ -16,8 +16,14 @@ export default function ChatPage() {
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
 
-  const thread = useLiveQuery(() => {
-    return chatDB.getThread(threadId);
+  const thread = useLiveQuery(async () => {
+    if (threadId !== "") {
+      const _thread = await chatDB.getThread(threadId);
+      if (!_thread) {
+        navigateToChat("");
+      }
+      return _thread;
+    }
   }, [threadId]);
 
   const messages = useLiveQuery(() => {
