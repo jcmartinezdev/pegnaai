@@ -3,7 +3,7 @@ import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./db";
 type CustomMetadataType =
   | {
       type: "thread-metadata";
-      title: string;
+      generatedTitle: string;
     }
   | {
       type: "search-metadata";
@@ -27,6 +27,7 @@ export interface AskMessagesModel {
 
 export interface AskModel {
   threadId: string;
+  generateTitle?: boolean;
   model: LlmModel;
   modelParams: ModelParams;
   messages: AskMessagesModel[];
@@ -144,7 +145,7 @@ export default async function askNextChat(
                 switch (data.type) {
                   case "thread-metadata":
                     await chatDB.threads.update(ask.threadId, {
-                      title: data.title,
+                      title: data.generatedTitle,
                     });
                     break;
                   case "search-metadata":

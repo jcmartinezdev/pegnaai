@@ -49,8 +49,10 @@ export default function ChatForm({
   const onSubmit: SubmitHandler<ChatFormInputs> = async (data) => {
     const modelParams = {};
     let saveThreadId = threadId;
+    let generateTitle = false;
 
     if (!saveThreadId) {
+      generateTitle = true;
       const newThreadId = await chatDB.createThread({
         title: "New Chat",
         model: data.model,
@@ -76,6 +78,7 @@ export default function ChatForm({
       model: data.model,
       modelParams: data.modelParams,
       messages: await chatDB.getAllMessages(saveThreadId),
+      generateTitle: generateTitle ? true : undefined,
     });
 
     reset({

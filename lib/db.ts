@@ -107,6 +107,7 @@ export class ChatDB extends Dexie {
     return await this.threads
       .where("status")
       .notEqual("deleted")
+      .reverse()
       .sortBy("lastMessageAt");
   }
 
