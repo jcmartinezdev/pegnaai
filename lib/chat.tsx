@@ -139,7 +139,7 @@ export default async function askNextChat(
           // Custom data arrived
           try {
             if (typeof content === "object") {
-              for (let o of content as []) {
+              for (const o of content as []) {
                 const data = o as CustomMetadataType;
                 console.log(`[STREAM][${op}]:`, data);
                 switch (data.type) {

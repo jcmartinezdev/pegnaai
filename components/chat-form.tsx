@@ -42,7 +42,7 @@ export default function ChatForm({
     if (defaultModelParams) {
       setValue("modelParams", defaultModelParams);
     }
-  }, [defaultModel, defaultModelParams]);
+  }, [defaultModel, defaultModelParams, setValue]);
 
   const { navigateToChat } = useChatRouter();
 
