@@ -1,8 +1,7 @@
 "use client";
 
-import ChatContent from "@/components/chat-content";
-import ChatForm from "@/components/chat-form";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
@@ -11,6 +10,9 @@ import { chatDB } from "@/lib/db";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
+import ChatContent from "./chat-content";
+import ChatForm from "./chat-form";
+import { toast } from "sonner";
 
 export default function ChatPage() {
   const { threadId, navigateToChat } = useChatRouter();
@@ -25,10 +27,37 @@ export default function ChatPage() {
       return _thread;
     }
   }, [threadId]);
-
   const messages = useLiveQuery(() => {
     return chatDB.getAllMessages(threadId);
   }, [threadId]);
+
+  const checkoutMutation = useMutation<{
+    redirectTo: string;
+  }>({
+    mutationFn: async () => {
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ returnTo: window.location.href }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create checkout session");
+      }
+
+      return response.json();
+    },
+    onError: () => {
+      toast.error("Failed to create checkout session");
+    },
+    onSuccess: (data) => {
+      console.log(data);
+      // Redirect to the checkout page
+      window.location.href = data.redirectTo;
+    },
+  });
 
   return (
     <>
@@ -82,6 +111,16 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="absolute bottom-0 w-full px-4">
+          <div className="mx-auto max-w-4xl my-4 rounded-xl border border-red-400/20 bg-red-300/10 px-5 py-3 text-red-800 shadow-lg backdrop-blur-md dark:border-red-800/20 dark:bg-red-700/20 dark:text-red-200 w-full">
+            You&apos;ve reached the message limit. &nbsp;
+            <Button
+              variant="link"
+              className="p-0"
+              onClick={() => checkoutMutation.mutate()}
+            >
+              Subscribe to continue chatting.
+            </Button>
+          </div>
           <ChatForm
             threadId={threadId}
             defaultModel={thread?.model}

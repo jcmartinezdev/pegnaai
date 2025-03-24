@@ -1,5 +1,3 @@
-"use client";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@radix-ui/react-tooltip";
-import ModelIcon from "./model-icon";
+import ModelIcon from "@/components/model-icon";
 
 interface ModelPickerProps {
   selectedModel: LlmModel;

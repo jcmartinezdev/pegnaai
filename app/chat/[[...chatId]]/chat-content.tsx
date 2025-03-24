@@ -1,11 +1,11 @@
 import { MessageModel } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Separator } from "./ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent } from "@radix-ui/react-collapsible";
-import { CollapsibleTrigger } from "./ui/collapsible";
-import { Button } from "./ui/button";
+import { CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2 } from "lucide-react";
-import MarkdownContent from "./markdown-content";
+import MarkdownContent from "@/components/markdown-content";
 
 type Props = {
   message: MessageModel;
