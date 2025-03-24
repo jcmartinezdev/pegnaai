@@ -145,7 +145,7 @@ export default function ChatForm({
                             "hover:bg-blue-600/10 hover:text-blue-600",
                             field.value
                               ? "bg-blue-600/10 text-blue-600"
-                              : "bg-transparent text-primary",
+                              : "bg-transparent text-accent-foreground",
                           )}
                           onClick={() => field.onChange(!field.value)}
                         >
@@ -180,7 +180,7 @@ export default function ChatForm({
                             "hover:bg-blue-600/10 hover:text-blue-600",
                             field.value === "high"
                               ? "bg-blue-600/10 text-blue-600"
-                              : "bg-transparent text-primary",
+                              : "bg-transparent text-accent-foreground",
                           )}
                           onClick={() =>
                             field.onChange(
