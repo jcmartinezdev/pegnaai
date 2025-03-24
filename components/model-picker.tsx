@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Zap, Brain, Sparkles, Gauge, ChevronDown, Globe } from "lucide-react";
+import { Brain, ChevronDown, Globe } from "lucide-react";
 import { LlmModel, models } from "@/lib/db";
 import {
   Tooltip,
@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@radix-ui/react-tooltip";
+import ModelIcon from "./model-icon";
 
 interface ModelPickerProps {
   selectedModel: LlmModel;
@@ -25,23 +26,7 @@ export function ModelPicker({
   selectedModel,
   onSelectModel,
 }: ModelPickerProps) {
-  const getIcon = (type: LlmModel) => {
-    switch (type) {
-      case "fast":
-        return <Zap className="h-5 w-5 text-yellow-500" />;
-      case "balanced":
-        return <Gauge className="h-5 w-5 text-blue-500" />;
-      case "powerful":
-        return <Brain className="h-5 w-5 text-purple-500" />;
-      case "code":
-        return <Sparkles className="h-5 w-5 text-pink-500" />;
-      default:
-        return null;
-    }
-  };
-
   const currentModel = models[selectedModel];
-  const currentIcon = getIcon(selectedModel);
 
   return (
     <DropdownMenu>
@@ -51,7 +36,7 @@ export function ModelPicker({
           className="flex items-center gap-2 min-w-40 justify-between"
         >
           <div className="flex items-center gap-2">
-            {currentIcon}
+            <ModelIcon model={selectedModel} className="h-5 w-5" />
             <span>{currentModel.name}</span>
           </div>
           <ChevronDown className="h-4 w-4 opacity-50" />
@@ -64,7 +49,9 @@ export function ModelPicker({
             className="flex items-start gap-2 py-2 cursor-pointer"
             onClick={() => onSelectModel(key as LlmModel)}
           >
-            <div className="mt-0.5">{getIcon(key as LlmModel)}</div>
+            <div className="mt-0.5">
+              <ModelIcon model={key as LlmModel} />
+            </div>
             <div className="flex-grow">
               <div className="font-medium">{model.name}</div>
               <div className="text-sm text-muted-foreground">
