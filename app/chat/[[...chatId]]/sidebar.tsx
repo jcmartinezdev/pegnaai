@@ -1,7 +1,6 @@
 "use client";
 
 import { MessageSquare, Plus } from "lucide-react";
-import { Button } from "./ui/button";
 import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/db";
 import { useChatRouter } from "@/lib/chatRouter";
@@ -16,9 +15,16 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
   useSidebar,
-} from "./ui/sidebar";
+} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { User } from "@auth0/nextjs-auth0/types";
+import Link from "next/link";
 
-export default function ChatSidebar() {
+type ChatSidebarProps = {
+  user?: User;
+};
+
+export default function ChatSidebar({ user }: ChatSidebarProps) {
   const { threadId, navigateToChat } = useChatRouter();
   const { setOpenMobile } = useSidebar();
 
@@ -62,8 +68,27 @@ export default function ChatSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex w-full items-center justify-center gap-3 p-4">
-          Juan
+        <div className="flex w-full items-center justify-center gap-3 p-y-4">
+          {user ? (
+            <Button
+              variant="ghost"
+              className="flex items-center justify-start w-full gap-x-4"
+              asChild
+            >
+              <Link href="/settings">
+                {user.picture && (
+                  <img
+                    alt="The user profile's picture"
+                    className="size-8 rounded-full bg-primary/10"
+                    src={user.picture}
+                  />
+                )}
+                <span className="truncate">{user.name}</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="ghost">Log in</Button>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>

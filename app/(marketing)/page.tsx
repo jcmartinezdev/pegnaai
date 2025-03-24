@@ -203,7 +203,7 @@ export default function Home() {
                 What Our Users Say
               </h2>
               <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed dark:text-gray-400">
-                Don't just take our word for it
+                Don&apos;t just take our word for it
               </p>
             </div>
 
@@ -219,9 +219,9 @@ export default function Home() {
                     <Star className="h-5 w-5 text-primary fill-primary" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400">
-                    "Pegna Chat has completely transformed how I interact with
-                    AI. It's incredibly fast and understands exactly what I'm
-                    asking."
+                    &quot;Pegna Chat has completely transformed how I interact
+                    with AI. It&apos;s incredibly fast and understands exactly
+                    what I&apos;m asking.&quot;
                   </p>
                 </div>
                 <div className="flex items-center gap-4 pt-6 mt-6 border-t border-primary/10">
@@ -247,9 +247,9 @@ export default function Home() {
                     <Star className="h-5 w-5 text-primary fill-primary" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400">
-                    "As someone who's not tech-savvy, I was amazed at how easy
-                    Pegna Chat is to use. It's like talking to a helpful
-                    friend."
+                    &quot;As someone who&apos;s not tech-savvy, I was amazed at
+                    how easy Pegna Chat is to use. It&apos;s like talking to a
+                    helpful friend.&quot;
                   </p>
                 </div>
                 <div className="flex items-center gap-4 pt-6 mt-6 border-t border-primary/10">
@@ -275,8 +275,8 @@ export default function Home() {
                     <Star className="h-5 w-5 text-primary fill-primary" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400">
-                    "The speed and accuracy of Pegna Chat is unmatched. It's
-                    become an essential tool for my daily work."
+                    &quot;The speed and accuracy of Pegna Chat is unmatched.
+                    It&apos;s become an essential tool for my daily work.&quot;
                   </p>
                 </div>
                 <div className="flex items-center gap-4 pt-6 mt-6 border-t border-primary/10">
@@ -320,8 +320,8 @@ export default function Home() {
                   Experience AI That Actually Delivers
                 </h2>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed">
-                  Join thousands of users who've upgraded their productivity
-                  with Pegna.ai's cutting-edge technology.
+                  Join thousands of users who&apos;ve upgraded their
+                  productivity with Pegna.ai&apos;s cutting-edge technology.
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row mt-6">
                   <Button

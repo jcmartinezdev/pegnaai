@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { LucideIcon, MessageSquare } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
 

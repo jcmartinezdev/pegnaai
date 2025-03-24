@@ -1,19 +1,20 @@
-"use client";
-
-import ChatSidebar from "@/components/sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ChatRouterProvider } from "@/lib/chatRouter";
+import ChatSidebar from "./sidebar";
+import { auth0 } from "@/lib/auth0";
 
-export default function ChatLayout({
+export default async function ChatLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth0.getSession();
+
   return (
     <ChatRouterProvider>
       <SidebarProvider>
         <div className="relative w-full flex h-dvh bg-background text-foreground">
-          <ChatSidebar />
+          <ChatSidebar user={session?.user} />
           <SidebarInset>{children}</SidebarInset>
         </div>
       </SidebarProvider>
