@@ -54,7 +54,7 @@ export default function ChatSidebar() {
                   className="w-full justify-start"
                 >
                   <MessageSquare className="w-6 h-6" />
-                  {thread.title}
+                  <span className="truncate">{thread.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
