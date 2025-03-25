@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { useChatRouter } from "@/lib/chatRouter";
-import { chatDB } from "@/lib/db";
+import { chatDB } from "@/lib/localDb";
 import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
@@ -38,11 +38,14 @@ export default function ChatPage() {
         returnTo: window.location.pathname,
       });
 
-      if (!response.success) {
+      console.log("[response]", response);
+
+      if (response && !response.success) {
         throw new Error("Failed to create checkout session");
       }
     },
-    onError: () => {
+    onError: (err) => {
+      console.log(err);
       toast.error("Failed to create checkout session");
     },
   });

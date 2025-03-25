@@ -2,7 +2,7 @@ import askNextChat from "@/lib/chat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { chatDB, LlmModel, ModelParams, models } from "@/lib/db";
+import { chatDB, LlmModel, ModelParams, models } from "@/lib/localDb";
 import { useChatRouter } from "@/lib/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";

@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "npx drizzle-kit generate",
+    "db:migrate": "npx drizzle-kit migrate",
+    "db:start": "docker run --name pegnaai -e POSTGRES_PASSWORD=pegnaai -e POSTGRES_USER=pegnaai -e POSTGRES_DB=pegnaai -p 5432:5432 -d postgres"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.0",
@@ -28,9 +31,11 @@
     "clsx": "^2.1.1",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
+    "drizzle-orm": "^0.41.0",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",
     "next-themes": "^0.4.6",
+    "pg": "^8.14.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
@@ -47,12 +52,15 @@
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22",
+    "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "drizzle-kit": "^0.30.5",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }
