@@ -1,4 +1,4 @@
-import { MessageModel } from "@/lib/db";
+import { MessageModel } from "@/lib/localDb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent } from "@radix-ui/react-collapsible";
