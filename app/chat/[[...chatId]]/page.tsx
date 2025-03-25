@@ -13,6 +13,7 @@ import { Plus } from "lucide-react";
 import ChatContent from "./chat-content";
 import ChatForm from "./chat-form";
 import { toast } from "sonner";
+import { startCheckoutFlow } from "@/actions/billing";
 
 export default function ChatPage() {
   const { threadId, navigateToChat } = useChatRouter();
@@ -31,31 +32,18 @@ export default function ChatPage() {
     return chatDB.getAllMessages(threadId);
   }, [threadId]);
 
-  const checkoutMutation = useMutation<{
-    redirectTo: string;
-  }>({
+  const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/billing/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ returnTo: window.location.href }),
+      const response = await startCheckoutFlow({
+        returnTo: window.location.pathname,
       });
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error("Failed to create checkout session");
       }
-
-      return response.json();
     },
     onError: () => {
       toast.error("Failed to create checkout session");
-    },
-    onSuccess: (data) => {
-      console.log(data);
-      // Redirect to the checkout page
-      window.location.href = data.redirectTo;
     },
   });
 
