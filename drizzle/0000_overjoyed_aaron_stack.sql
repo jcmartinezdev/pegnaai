@@ -4,6 +4,5 @@ CREATE TABLE "users" (
 	"plan_name" "tier" DEFAULT 'free' NOT NULL,
 	"stripe_customer_id" varchar,
 	"stripe_subscription_id" varchar,
-	"stripe_product_id" varchar,
 	"subscription_status" varchar(25)
 );

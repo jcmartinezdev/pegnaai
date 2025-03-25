@@ -44,7 +44,7 @@ export async function startCheckoutFlow({
         quantity: 1,
       },
     ],
-    customer_email: session.user.email,
+    customer_email: user[0]?.stripeCustomerId ? undefined : session.user.email,
     customer: user[0]?.stripeCustomerId || undefined,
     client_reference_id: session.user.sub,
     success_url: successUrl.href,

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "npx drizzle-kit migrate",
     "db:start": "docker run --name pegnaai -e POSTGRES_PASSWORD=pegnaai -e POSTGRES_USER=pegnaai -e POSTGRES_DB=pegnaai -p 5432:5432 -d postgres"

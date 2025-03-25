@@ -7,6 +7,5 @@ export const usersTable = pgTable("users", {
   planName: tierEnum("plan_name").default("free").notNull(),
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
-  stripeProductId: varchar("stripe_product_id"),
   subscriptionStatus: varchar("subscription_status", { length: 25 }),
 });

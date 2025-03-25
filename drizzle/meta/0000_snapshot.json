@@ -1,5 +1,5 @@
 {
-  "id": "048d169c-03d5-4b31-ad72-ffb9e1685072",
+  "id": "53327e1e-c90f-43bf-9cbe-c11b67c03bd1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -30,12 +30,6 @@
         },
         "stripe_subscription_id": {
           "name": "stripe_subscription_id",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stripe_product_id": {
-          "name": "stripe_product_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false
