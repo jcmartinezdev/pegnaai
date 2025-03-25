@@ -1,4 +1,4 @@
-import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./db";
+import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./localDb";
 
 type CustomMetadataType =
   | {

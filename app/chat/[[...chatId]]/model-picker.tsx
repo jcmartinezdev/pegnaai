@@ -1,5 +1,3 @@
-"use client";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,14 +6,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Brain, ChevronDown, Globe } from "lucide-react";
-import { LlmModel, models } from "@/lib/db";
+import { LlmModel, models } from "@/lib/localDb";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@radix-ui/react-tooltip";
-import ModelIcon from "./model-icon";
+import ModelIcon from "@/components/model-icon";
 
 interface ModelPickerProps {
   selectedModel: LlmModel;

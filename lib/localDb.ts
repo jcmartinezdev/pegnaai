@@ -1,3 +1,5 @@
+"use client";
+
 import Dexie, { type EntityTable } from "dexie";
 
 export type LlmModel = "fast" | "balanced" | "powerful" | "code";

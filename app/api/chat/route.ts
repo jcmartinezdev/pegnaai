@@ -1,4 +1,4 @@
-import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/db";
+import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/localDb";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
