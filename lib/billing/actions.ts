@@ -1,13 +1,19 @@
 "use server";
 
 import { auth0 } from "@/lib/auth0";
-import { ActionResponse } from "./base";
 import { redirect } from "next/navigation";
-import { stripe } from "@/lib/stripe";
+import { stripe } from "@/lib/billing/stripe";
 import { db } from "@/db";
 import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { ActionResponse } from "./types";
+import { getUser } from "@/db/queries";
 
+/**
+ * Starts the checkout flow for a subscription
+ *
+ * @param returnTo - The URL to return to after the checkout flow is complete
+ */
 export async function startCheckoutFlow({
   returnTo,
 }: {
@@ -59,4 +65,41 @@ export async function startCheckoutFlow({
   }
 
   redirect(checkoutSession.url);
+}
+
+/**
+ * Navigates the user to the customer portal
+ */
+export async function openCustomerPortal() {
+  const session = await auth0.getSession();
+
+  if (!session) {
+    return {
+      success: false,
+      error: "No session found",
+    };
+  }
+
+  const user = await getUser(session.user.sub);
+
+  if (!user || !user.stripeCustomerId) {
+    return {
+      success: false,
+      error: "No stripe customer found",
+    };
+  }
+
+  const configuration = await stripe.billingPortal.sessions.create({
+    customer: user.stripeCustomerId,
+    return_url: `${process.env.APP_BASE_URL}/settings/account`,
+  });
+
+  if (!configuration.url) {
+    return {
+      success: false,
+      error: "Failed to create billing portal session",
+    };
+  }
+
+  redirect(configuration.url);
 }

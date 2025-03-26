@@ -6,12 +6,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { AlertTriangle, Check, CreditCard, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Award,
+  Check,
+  CreditCard,
+  Trash2,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import CustomerPortalButton from "./customer-portal-button";
+import { getUser } from "@/db/queries";
+import { auth0 } from "@/lib/auth0";
+import { getPlanName, isFreePlan } from "@/lib/billing/account";
+import CheckoutButton from "./checkout-button";
 
-export default function SubscriptionPage() {
+export default async function SubscriptionPage() {
+  const session = await auth0.getSession();
+  const user = await getUser(session!.user.sub);
+
   return (
     <div className="space-y-6">
       <div>
@@ -29,36 +43,33 @@ export default function SubscriptionPage() {
                 <CreditCard className="h-5 w-5" />
               </div>
               <div>
-                <CardTitle>Pro Plan</CardTitle>
+                <CardTitle>{getPlanName(user?.planName)} Plan</CardTitle>
                 <CardDescription>
-                  Your subscription renews on June 15, 2024
+                  {isFreePlan(user?.planName)
+                    ? "You're currently on the free plan"
+                    : "Your subscription renews on June 15, 2024"}
                 </CardDescription>
               </div>
             </div>
-            <Badge variant="outline" className="bg-primary/10">
-              Active
-            </Badge>
+            {!isFreePlan(user?.planName) && <CustomerPortalButton />}
           </div>
         </CardHeader>
 
         <CardContent>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <p className="text-2xl font-bold">
-                $19
-                <span className="text-sm font-normal text-muted-foreground">
-                  /month
-                </span>
-              </p>
-            </div>
-            <Button>Manage Subscription</Button>
-          </div>
-
-          <Separator className="my-6" />
-
+          <Separator className="mb-6" />
           <div>
-            <h4 className="mb-4 text-base font-medium">Plan Features</h4>
+            {isFreePlan(user?.planName) ? (
+              <h4 className="mb-4 text-base font-medium">Upgrade to Pro</h4>
+            ) : (
+              <h4 className="mb-4 text-base font-medium">Plan Features</h4>
+            )}
             <ul className="space-y-3">
+              <li className="flex items-center">
+                <div className="mr-3 rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
+                <span>Access to all available AI models</span>
+              </li>
               <li className="flex items-center">
                 <div className="mr-3 rounded-full p-1">
                   <Check className="h-4 w-4" />
@@ -69,7 +80,7 @@ export default function SubscriptionPage() {
                 <div className="mr-3 rounded-full p-1">
                   <Check className="h-4 w-4" />
                 </div>
-                <span>200 premium model queries per month</span>
+                <span>200 premium model messages per month</span>
               </li>
               <li className="flex items-center">
                 <div className="mr-3 rounded-full p-1">
@@ -104,6 +115,27 @@ export default function SubscriptionPage() {
           */}
         </CardContent>
       </Card>
+
+      {isFreePlan(user?.planName) && (
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-x-4">
+                <Award className="mr-2 h-5 w-5 text-primary" />
+                <div className="space-y-2">
+                  <h3 className="text-xl font-medium flex items-center">
+                    Ready to unlock the full potential?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Join thousands of users who have upgraded to our Pro plan.
+                  </p>
+                </div>
+              </div>
+              <CheckoutButton />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

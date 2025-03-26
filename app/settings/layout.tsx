@@ -2,27 +2,27 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  BarChart,
-  ChevronLeft,
-  CreditCard,
-  LifeBuoy,
-  Settings,
-  User,
-} from "lucide-react";
+import { auth0 } from "@/lib/auth0";
+import { BarChart, ChevronLeft, LifeBuoy, Settings, User } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Settings",
   description: "Manage your account settings and preferences.",
 };
 
-export default function SettingsLayout({
+export default async function SettingsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth0.getSession();
+  if (!session) {
+    redirect("/");
+  }
+
   return (
     <div className="container mx-auto py-10">
       <div className="mb-6 flex items-center">

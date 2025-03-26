@@ -4,7 +4,9 @@ import { eq } from "drizzle-orm";
 import { db } from ".";
 import { usersTable } from "./schema";
 
-export async function getUser(id: string) {
+export async function getUser(
+  id: string,
+): Promise<typeof usersTable.$inferSelect | undefined> {
   const users = await db
     .select()
     .from(usersTable)

@@ -13,7 +13,7 @@ import { Plus } from "lucide-react";
 import ChatContent from "./chat-content";
 import ChatForm from "./chat-form";
 import { toast } from "sonner";
-import { startCheckoutFlow } from "@/actions/billing";
+import { startCheckoutFlow } from "@/lib/billing/actions";
 
 export default function ChatPage() {
   const { threadId, navigateToChat } = useChatRouter();
