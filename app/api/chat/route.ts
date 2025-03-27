@@ -19,6 +19,9 @@ import {
   SearchMetadata,
 } from "@/lib/chat/types";
 import { isFreePlan } from "@/lib/billing/account";
+import { cookies } from "next/headers";
+
+const RATE_LIMIT_COOKIE = "pegna_rl";
 
 const DEFAULT_PROMPT = `
 You are Pegna AI, an AI assistant built for everyday users, powered by the smartest LLM models out there.
@@ -184,6 +187,27 @@ export async function POST(req: Request) {
       limits.premiumMessagesLimit -
       usage.premiumMessagesCount -
       (currentModel.isPremium ? 1 : 0);
+  } else {
+    const cookieStore = await cookies();
+    if (cookieStore.has(RATE_LIMIT_COOKIE)) {
+      remainingMessages = Number(cookieStore.get(RATE_LIMIT_COOKIE)?.value);
+
+      if (remainingMessages <= 0) {
+        return new Response(
+          JSON.stringify({
+            message: "You have reached your message limit",
+            type: "rate_limit",
+          }),
+          { status: 429 },
+        );
+      }
+      remainingMessages--;
+    } else {
+      remainingMessages = 9;
+    }
+
+    // Save the new value
+    cookieStore.set(RATE_LIMIT_COOKIE, String(remainingMessages));
   }
 
   return createDataStreamResponse({
