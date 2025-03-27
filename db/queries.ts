@@ -1,10 +1,17 @@
 "only server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from ".";
 import { usersTable, userUsagesTable } from "./schema";
 import { isFreePlan } from "@/lib/billing/account";
 
+/**
+ * Get a user by their ID
+ *
+ * @param id - The user ID
+ *
+ * @returns The user with the given ID
+ */
 export async function getUser(
   id: string,
 ): Promise<typeof usersTable.$inferSelect | undefined> {
@@ -17,6 +24,13 @@ export async function getUser(
   return users[0];
 }
 
+/**
+ * Get a user by their Stripe customer ID
+ *
+ * @param stripeCustomerId - The Stripe customer ID
+ *
+ * @returns The user with the given Stripe customer ID
+ */
 export async function getUserByStripeCustomerId(stripeCustomerId: string) {
   const users = await db
     .select()
@@ -93,6 +107,36 @@ export async function getCurrentUserUsageForUser(
   );
 }
 
+export async function incrementUserUsageForUser(
+  userId: string,
+  isPremiumMessage: boolean,
+) {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
+
+  return await db
+    .insert(userUsagesTable)
+    .values({
+      userId,
+      year: currentYear,
+      month: currentMonth,
+      messagesCount: isPremiumMessage ? 0 : 1,
+      premiumMessagesCount: isPremiumMessage ? 1 : 0,
+    })
+    .onConflictDoUpdate({
+      target: [
+        userUsagesTable.userId,
+        userUsagesTable.year,
+        userUsagesTable.month,
+      ],
+      set: {
+        messagesCount: sql`${userUsagesTable.messagesCount} + ${isPremiumMessage ? 0 : 1}`,
+        premiumMessagesCount: sql`${userUsagesTable.premiumMessagesCount} + ${isPremiumMessage ? 1 : 0}`,
+      },
+    })
+    .returning();
+}
+
 /**
  * Get the user monthly limits
  *
@@ -135,6 +179,9 @@ export async function getUserLimits(userId?: string) {
   }
 }
 
+/**
+ * Get the pro plan limits
+ */
 export function getProLimits() {
   return {
     messagesLimit: 1500,

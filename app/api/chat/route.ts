@@ -1,10 +1,18 @@
-import { models, LlmModel, ModelParams, SearchMetadata } from "@/lib/localDb";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
-import { AskMessagesModel, AskModel } from "@/lib/chat";
+import { incrementUserUsageForUser } from "@/db/queries";
+import { auth0 } from "@/lib/auth0";
+import {
+  AskMessagesModel,
+  AskModel,
+  LlmModel,
+  ModelParams,
+  models,
+  SearchMetadata,
+} from "@/lib/chat/types";
 
 const DEFAULT_PROMPT = `
 You are Pegna AI, an AI assistant built for everyday users, powered by the smartest LLM models out there.
@@ -72,9 +80,9 @@ const askModelSchema = z.object({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { success, data, error } = askModelSchema.safeParse(body);
+  console.log("Models", models, models.fast);
+  const { success, data } = askModelSchema.safeParse(body);
   if (!success) {
-    console.log("Invalid request", error);
     return new Response(
       JSON.stringify({ message: "Invalid request", type: "invalid_request" }),
       { status: 400 },
@@ -98,6 +106,13 @@ export async function POST(req: Request) {
     generatedTitle = title;
   }
 
+  const session = await auth0.getSession();
+  const currentModel = models[model];
+
+  if (session) {
+    incrementUserUsageForUser(session.user.sub, currentModel.isPremium);
+  }
+
   return createDataStreamResponse({
     execute: (dataStream) => {
       if (generatedTitle) {
@@ -109,7 +124,7 @@ export async function POST(req: Request) {
         system: DEFAULT_PROMPT,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         onFinish: ({ providerMetadata }) => {
-          console.log("Provider metadata", providerMetadata);
+          // Process provider metadata
           const googleMetadata = providerMetadata?.google as
             | GoogleGenerativeAIProviderMetadata
             | undefined;

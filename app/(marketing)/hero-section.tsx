@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { models } from "@/lib/localDb";
+import { models } from "@/lib/chat/types";
 import { ArrowDown, MessageSquare, Sparkles } from "lucide-react";
 import Link from "next/link";
 

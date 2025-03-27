@@ -1,4 +1,4 @@
-import { LlmModel } from "@/lib/localDb";
+import { LlmModel } from "@/lib/chat/types";
 import { cn } from "@/lib/utils";
 import { Brain, Gauge, LucideProps, Sparkles, Zap } from "lucide-react";
 

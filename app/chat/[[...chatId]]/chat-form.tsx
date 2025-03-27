@@ -1,8 +1,6 @@
-import askNextChat from "@/lib/chat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { chatDB, LlmModel, ModelParams, models } from "@/lib/localDb";
 import { useChatRouter } from "@/lib/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";
@@ -11,6 +9,9 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { LlmModel, ModelParams, models } from "@/lib/chat/types";
+import { chatDB } from "@/lib/localDb";
+import askNextChat from "@/lib/chat/ask-chat";
 
 type Props = {
   threadId: string;

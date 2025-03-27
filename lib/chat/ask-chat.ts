@@ -1,45 +1,16 @@
-import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./localDb";
+"use client";
 
-type CustomMetadataType =
-  | {
-      type: "thread-metadata";
-      generatedTitle: string;
-    }
-  | {
-      type: "search-metadata";
-      value: SearchMetadata[];
-    };
-
-interface FinishedStreamType {
-  finishReason?: "stop" | "length" | "content-filter" | "error";
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-  };
-  isContinued?: boolean;
-}
-
-export interface AskMessagesModel {
-  id: string;
-  content: string;
-  role: "assistant" | "user" | "system";
-}
-
-export interface AskModel {
-  threadId: string;
-  generateTitle?: boolean;
-  model: LlmModel;
-  modelParams: ModelParams;
-  messages: AskMessagesModel[];
-}
+import { chatDB } from "../localDb";
+import { AskModel, CustomMetadataType, FinishedStreamType } from "./types";
 
 interface ResponseModel {
   success: boolean;
   error?: string;
 }
+type NewType = AskModel;
 
 export default async function askNextChat(
-  ask: AskModel,
+  ask: NewType,
 ): Promise<ResponseModel> {
   const responseMessageId = await chatDB.addMessage({
     threadId: ask.threadId,
@@ -61,7 +32,13 @@ export default async function askNextChat(
   if (!response.ok) {
     console.error("[STREAM] Failed to fetch response", response);
 
-    const result = await response.json();
+    let result = {
+      type: "internal_server_error",
+      message: "Internal Server Error",
+    };
+    try {
+      result = await response.json();
+    } catch {}
     await chatDB.messages.update(responseMessageId, {
       status: "error",
       content: "Failed to fetch response",
