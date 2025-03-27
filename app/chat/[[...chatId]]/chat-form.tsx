@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useChatRouter } from "@/lib/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";
@@ -9,14 +9,15 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { LlmModel, ModelParams, models } from "@/lib/chat/types";
+import { AskModel, LlmModel, ModelParams, models } from "@/lib/chat/types";
 import { chatDB } from "@/lib/localDb";
-import askNextChat from "@/lib/chat/ask-chat";
 
 type Props = {
   threadId: string;
   defaultModel?: LlmModel;
   defaultModelParams?: ModelParams;
+  onProcessPegnaAIStream: (ask: AskModel) => Promise<void>;
+  setRemainingLimits: (remainingLimits: number | undefined) => void;
 };
 
 type ChatFormInputs = {
@@ -29,14 +30,22 @@ export default function ChatForm({
   threadId,
   defaultModel,
   defaultModelParams,
+  onProcessPegnaAIStream,
+  setRemainingLimits,
 }: Props) {
-  const { register, handleSubmit, control, reset, watch, setValue } =
+  const { register, handleSubmit, control, reset, setValue } =
     useForm<ChatFormInputs>({
       defaultValues: {
         model: defaultModel || "fast",
         modelParams: defaultModelParams || {},
       },
     });
+
+  const model = useWatch({ control, name: "model" });
+
+  useEffect(() => {
+    setRemainingLimits(undefined);
+  }, [model]);
 
   useEffect(() => {
     setValue("model", defaultModel || "fast");
@@ -74,7 +83,7 @@ export default function ChatForm({
       modelParams,
     });
 
-    askNextChat({
+    onProcessPegnaAIStream({
       threadId: saveThreadId,
       model: data.model,
       modelParams: data.modelParams,
@@ -88,7 +97,7 @@ export default function ChatForm({
     });
   };
 
-  const currentModel = models[watch("model")];
+  const currentModel = models[model];
 
   return (
     <form

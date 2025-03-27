@@ -1,7 +1,6 @@
 "use client";
 
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
@@ -12,12 +11,25 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
 import ChatContent from "./chat-content";
 import ChatForm from "./chat-form";
-import { toast } from "sonner";
-import { startCheckoutFlow } from "@/lib/billing/actions";
+import { useEffect, useState } from "react";
+import processPegnaAIStream from "@/lib/chat/ask-chat";
+import { AskModel } from "@/lib/chat/types";
+import ChatLimitBanner from "./chat-limit-banner";
 
 export default function ChatPage() {
+  const [remainingLimits, setRemainingLimits] = useState<number | undefined>();
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
+
+  // When the user selects a new chat, let's clear the remaining limits
+  useEffect(() => {
+    setRemainingLimits(undefined);
+  }, [threadId]);
+
+  async function onProcessPegnaAIStream(ask: AskModel) {
+    const response = await processPegnaAIStream(ask);
+    setRemainingLimits(response.remainingMessages);
+  }
 
   const thread = useLiveQuery(async () => {
     if (threadId !== "") {
@@ -28,27 +40,10 @@ export default function ChatPage() {
       return _thread;
     }
   }, [threadId]);
+
   const messages = useLiveQuery(() => {
     return chatDB.getAllMessages(threadId);
   }, [threadId]);
-
-  const checkoutMutation = useMutation({
-    mutationFn: async () => {
-      const response = await startCheckoutFlow({
-        returnTo: window.location.pathname,
-      });
-
-      console.log("[response]", response);
-
-      if (response && !response.success) {
-        throw new Error("Failed to create checkout session");
-      }
-    },
-    onError: (err) => {
-      console.log(err);
-      toast.error("Failed to create checkout session");
-    },
-  });
 
   return (
     <>
@@ -102,20 +97,21 @@ export default function ChatPage() {
           </div>
         </div>
         <div className="absolute bottom-0 w-full px-4">
-          <div className="mx-auto max-w-4xl my-4 rounded-xl border border-red-400/20 bg-red-300/10 px-5 py-3 text-red-800 shadow-lg backdrop-blur-md dark:border-red-800/20 dark:bg-red-700/20 dark:text-red-200 w-full">
-            You&apos;ve reached the message limit. &nbsp;
-            <Button
-              variant="link"
-              className="p-0"
-              onClick={() => checkoutMutation.mutate()}
-            >
-              Subscribe to continue chatting.
-            </Button>
-          </div>
+          {remainingLimits === 0 && (
+            <ChatLimitBanner message="You've reached the message limit." />
+          )}
+          {remainingLimits && remainingLimits < 10 && remainingLimits > 0 && (
+            <ChatLimitBanner
+              message={`You've ${remainingLimits} messages left.`}
+            />
+          )}
+
           <ChatForm
             threadId={threadId}
             defaultModel={thread?.model}
             defaultModelParams={thread?.modelParams}
+            setRemainingLimits={setRemainingLimits}
+            onProcessPegnaAIStream={onProcessPegnaAIStream}
           />
         </div>
       </div>

@@ -40,6 +40,7 @@ export class ChatDB extends Dexie {
     this.version(1).stores({
       threads: "id, createdAt, status",
       messages: "id, threadId, createdAt, status",
+      limits: "id",
     });
 
     this.threads = this.table("threads");

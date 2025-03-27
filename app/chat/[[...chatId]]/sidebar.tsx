@@ -87,7 +87,9 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
               </Link>
             </Button>
           ) : (
-            <Button variant="ghost">Log in</Button>
+            <Button variant="ghost" asChild>
+              <Link href="/auth/login?returnTo=/chat">Log in</Link>
+            </Button>
           )}
         </div>
       </SidebarFooter>

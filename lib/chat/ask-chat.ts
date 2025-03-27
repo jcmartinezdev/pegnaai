@@ -1,17 +1,22 @@
 "use client";
 
 import { chatDB } from "../localDb";
-import { AskModel, CustomMetadataType, FinishedStreamType } from "./types";
+import {
+  AskModel,
+  CustomMetadataType,
+  FinishedStreamType,
+  models,
+} from "./types";
 
-interface ResponseModel {
+interface ResponsePegnaAIStream {
   success: boolean;
+  remainingMessages?: number;
   error?: string;
 }
-type NewType = AskModel;
 
-export default async function askNextChat(
-  ask: NewType,
-): Promise<ResponseModel> {
+export default async function processPegnaAIStream(
+  ask: AskModel,
+): Promise<ResponsePegnaAIStream> {
   const responseMessageId = await chatDB.addMessage({
     threadId: ask.threadId,
     content: "",
@@ -39,6 +44,21 @@ export default async function askNextChat(
     try {
       result = await response.json();
     } catch {}
+
+    if (result.type === "rate_limit") {
+      await chatDB.messages.update(responseMessageId, {
+        status: "error",
+        content: result.message,
+        serverError: result,
+      });
+
+      return {
+        success: false,
+        error: result.message,
+        remainingMessages: 0,
+      };
+    }
+
     await chatDB.messages.update(responseMessageId, {
       status: "error",
       content: "Failed to fetch response",
@@ -72,6 +92,7 @@ export default async function askNextChat(
     };
   }
   const textDecoder = new TextDecoder();
+  let remainingMessages: number | undefined = undefined;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -129,6 +150,11 @@ export default async function askNextChat(
                     await chatDB.messages.update(responseMessageId, {
                       searchMetadata: data.value,
                     });
+                    break;
+                  case "rate-limit":
+                    remainingMessages = models[ask.model].isPremium
+                      ? data.value.remainingPremiumMessages
+                      : data.value.remainingMessages;
                     break;
                 }
                 break;
@@ -191,6 +217,7 @@ export default async function askNextChat(
                 return {
                   success: false,
                   error: "Unknown finish reason",
+                  remainingMessages,
                 };
             }
           } catch (error) {
@@ -202,6 +229,7 @@ export default async function askNextChat(
             return {
               success: false,
               error: "Error parsing data chunk JSON",
+              remainingMessages,
             };
           }
           break;
@@ -211,5 +239,6 @@ export default async function askNextChat(
 
   return {
     success: true,
+    remainingMessages,
   };
 }

@@ -72,6 +72,13 @@ export type CustomMetadataType =
   | {
       type: "search-metadata";
       value: SearchMetadata[];
+    }
+  | {
+      type: "rate-limit";
+      value: {
+        remainingMessages: number;
+        remainingPremiumMessages: number;
+      };
     };
 
 export interface FinishedStreamType {

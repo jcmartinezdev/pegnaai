@@ -3,7 +3,11 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
-import { incrementUserUsageForUser } from "@/db/queries";
+import {
+  getCurrentUserUsageForUser,
+  getUserLimits,
+  incrementUserUsageForUser,
+} from "@/db/queries";
 import { auth0 } from "@/lib/auth0";
 import {
   AskMessagesModel,
@@ -109,14 +113,61 @@ export async function POST(req: Request) {
   const session = await auth0.getSession();
   const currentModel = models[model];
 
+  const limits = await getUserLimits(session?.user.sub);
+
+  let remainingMessages = 0;
+  let remainingPremiumMessages = 0;
   if (session) {
-    incrementUserUsageForUser(session.user.sub, currentModel.isPremium);
+    // Check for rate limits
+    const usage = await getCurrentUserUsageForUser(session.user.sub);
+    if (currentModel.isPremium) {
+      if (usage.premiumMessagesCount >= limits.premiumMessagesLimit) {
+        return new Response(
+          JSON.stringify({
+            message: "You have reached your premium message limit",
+            type: "rate_limit",
+          }),
+          { status: 429 },
+        );
+      }
+    } else {
+      if (usage.messagesCount >= limits.messagesLimit) {
+        return new Response(
+          JSON.stringify({
+            message: "You have reached your message limit",
+            type: "rate_limit",
+          }),
+          { status: 429 },
+        );
+      }
+    }
+
+    await incrementUserUsageForUser(session.user.sub, currentModel.isPremium);
+
+    remainingMessages =
+      limits.messagesLimit -
+      usage.messagesCount -
+      (currentModel.isPremium ? 0 : 1);
+    remainingPremiumMessages =
+      limits.premiumMessagesLimit -
+      usage.premiumMessagesCount -
+      (currentModel.isPremium ? 1 : 0);
   }
 
   return createDataStreamResponse({
     execute: (dataStream) => {
       if (generatedTitle) {
         dataStream.writeData({ type: "thread-metadata", generatedTitle });
+      }
+
+      if (remainingPremiumMessages < 10 || remainingMessages < 10) {
+        dataStream.writeData({
+          type: "rate-limit",
+          value: {
+            remainingMessages,
+            remainingPremiumMessages,
+          },
+        });
       }
 
       const result = streamText({
