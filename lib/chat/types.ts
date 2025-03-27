@@ -8,6 +8,7 @@ type ModelType = {
   allowSearch: boolean;
   allowReasoning: boolean;
 
+  requiresPro: boolean;
   isPremium: boolean;
 };
 
@@ -19,6 +20,7 @@ export const models: Record<LlmModel, ModelType> = {
     actualModel: "gemini-2.0-flash",
     allowSearch: true,
     allowReasoning: false,
+    requiresPro: false,
     isPremium: false,
   },
   balanced: {
@@ -28,6 +30,7 @@ export const models: Record<LlmModel, ModelType> = {
     actualModel: "o3-mini",
     allowSearch: false,
     allowReasoning: true,
+    requiresPro: true,
     isPremium: false,
   },
   powerful: {
@@ -37,6 +40,7 @@ export const models: Record<LlmModel, ModelType> = {
     actualModel: "GPT 4o",
     allowSearch: false,
     allowReasoning: false,
+    requiresPro: true,
     isPremium: true,
   },
   code: {
@@ -46,6 +50,7 @@ export const models: Record<LlmModel, ModelType> = {
     actualModel: "claude-3-7-sonnet-20250219",
     allowSearch: false,
     allowReasoning: true,
+    requiresPro: true,
     isPremium: true,
   },
 };

@@ -5,6 +5,7 @@ import { createDataStreamResponse, generateText, streamText } from "ai";
 import { z } from "zod";
 import {
   getCurrentUserUsageForUser,
+  getUser,
   getUserLimits,
   incrementUserUsageForUser,
 } from "@/db/queries";
@@ -17,6 +18,7 @@ import {
   models,
   SearchMetadata,
 } from "@/lib/chat/types";
+import { isFreePlan } from "@/lib/billing/account";
 
 const DEFAULT_PROMPT = `
 You are Pegna AI, an AI assistant built for everyday users, powered by the smartest LLM models out there.
@@ -117,6 +119,36 @@ export async function POST(req: Request) {
 
   let remainingMessages = 0;
   let remainingPremiumMessages = 0;
+
+  // Validate if the user has access to the model
+  // And to advanced features such as search, or high reasoning
+  let hasAccess = false;
+  if (
+    currentModel.requiresPro ||
+    modelParams?.includeSearch ||
+    modelParams?.reasoningEffort === "high"
+  ) {
+    if (session) {
+      const user = await getUser(session.user.sub);
+      if (!isFreePlan(user?.planName)) {
+        hasAccess = true;
+      }
+    }
+  } else {
+    hasAccess = true;
+  }
+
+  if (!hasAccess) {
+    return new Response(
+      JSON.stringify({
+        message: "You need a pro account to access this model.",
+        type: "rate_limit",
+      }),
+      { status: 429 },
+    );
+  }
+
+  // Validate rate limits
   if (session) {
     // Check for rate limits
     const usage = await getCurrentUserUsageForUser(session.user.sub);
@@ -124,7 +156,7 @@ export async function POST(req: Request) {
       if (usage.premiumMessagesCount >= limits.premiumMessagesLimit) {
         return new Response(
           JSON.stringify({
-            message: "You have reached your premium message limit",
+            message: "You have reached your premium message limit.",
             type: "rate_limit",
           }),
           { status: 429 },
