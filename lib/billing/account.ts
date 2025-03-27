@@ -1,14 +1,14 @@
 /**
  * Get the plan name from the plan code
  */
-export function getPlanName(plan: string) {
+export function getPlanName(plan?: string) {
   switch (plan) {
     case "free":
       return "Free";
     case "pro":
       return "Pro";
     default:
-      return "Unknown";
+      return "Free";
   }
 }
 

@@ -1,12 +1,12 @@
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { auth0 } from "@/lib/auth0";
 import { BarChart, ChevronLeft, LifeBuoy, Settings, User } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import UserUsageSummary from "./user-usage-summary";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -36,43 +36,7 @@ export default async function SettingsLayout({
         <ThemeSwitcher />
       </div>
 
-      {/* Usage Summary - Always visible */}
-      <div className="mb-6 rounded-lg border bg-background p-4 shadow-sm">
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-lg font-medium">Usage Summary</h2>
-          <Link
-            href="/settings/usage"
-            className="text-sm text-primary hover:underline"
-          >
-            View Details
-          </Link>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Messages</span>
-              <span className="font-medium">1,045 / 1,500</span>
-            </div>
-            <Progress value={70} className="h-2" />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>70% used</span>
-              <span>455 remaining</span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Premium Models</span>
-              <span className="font-medium">87 / 200</span>
-            </div>
-            <Progress value={43} className="h-2" />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>43% used</span>
-              <span>113 remaining</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserUsageSummary />
 
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
         <aside className="lg:w-1/5">

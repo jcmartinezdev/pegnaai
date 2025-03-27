@@ -1,8 +1,9 @@
 "only server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from ".";
-import { usersTable } from "./schema";
+import { usersTable, userUsagesTable } from "./schema";
+import { isFreePlan } from "@/lib/billing/account";
 
 export async function getUser(
   id: string,
@@ -35,4 +36,108 @@ export async function updateUser(
   user: Omit<typeof usersTable.$inferInsert, "id">,
 ) {
   return db.update(usersTable).set(user).where(eq(usersTable.id, id));
+}
+
+/**
+ * Get the usage for a user for a specific period
+ *
+ * @param userId - The user ID
+ * @param year - The year
+ * @param month - The month
+ *
+ * @returns The usage for the user for the period
+ */
+export async function getUserUsageForPeriod(
+  userId: string,
+  year: number,
+  month: number,
+): Promise<typeof userUsagesTable.$inferSelect> {
+  const usages = await db
+    .select()
+    .from(userUsagesTable)
+    .where(
+      and(
+        eq(userUsagesTable.userId, userId),
+        eq(userUsagesTable.year, year),
+        eq(userUsagesTable.month, month),
+      ),
+    );
+
+  if (usages.length === 0) {
+    return {
+      userId,
+      year,
+      month,
+      messagesCount: 0,
+      premiumMessagesCount: 0,
+    };
+  }
+
+  return usages[0];
+}
+
+/**
+ * Get the usage for a user for the current period
+ *
+ * @param userId - The user ID
+ *
+ * @returns The usage for the user for the current period
+ */
+export async function getCurrentUserUsageForUser(
+  userId: string,
+): Promise<typeof userUsagesTable.$inferSelect> {
+  return getUserUsageForPeriod(
+    userId,
+    new Date().getFullYear(),
+    new Date().getMonth(),
+  );
+}
+
+/**
+ * Get the user monthly limits
+ *
+ * @param userId - The user ID
+ *
+ * @returns The user monthly limits
+ */
+export async function getUserLimits(userId?: string) {
+  const today = new Date();
+  const currentDay = today.getDate();
+
+  // Get the last day of the current month
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth();
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  // Calculate days remaining
+  const daysUntilNextMonth = lastDayOfMonth - currentDay;
+
+  if (!userId) {
+    return {
+      messagesLimit: 10,
+      premiumMessagesLimit: 0,
+      resetsIn: daysUntilNextMonth,
+    };
+  }
+
+  const user = await getUser(userId);
+  if (isFreePlan(user?.planName)) {
+    return {
+      messagesLimit: 50,
+      premiumMessagesLimit: 0,
+      resetsIn: daysUntilNextMonth,
+    };
+  } else {
+    return {
+      ...getProLimits(),
+      resetsIn: daysUntilNextMonth,
+    };
+  }
+}
+
+export function getProLimits() {
+  return {
+    messagesLimit: 1500,
+    premiumMessagesLimit: 200,
+  };
 }

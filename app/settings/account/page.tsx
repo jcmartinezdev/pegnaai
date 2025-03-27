@@ -7,17 +7,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Award,
-  Check,
-  CreditCard,
-  Trash2,
-} from "lucide-react";
+import { AlertTriangle, Award, Check, CreditCard, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CustomerPortalButton from "./customer-portal-button";
-import { getUser } from "@/db/queries";
+import { getProLimits, getUser } from "@/db/queries";
 import { auth0 } from "@/lib/auth0";
 import { getPlanName, isFreePlan } from "@/lib/billing/account";
 import CheckoutButton from "./checkout-button";
@@ -25,6 +18,7 @@ import CheckoutButton from "./checkout-button";
 export default async function SubscriptionPage() {
   const session = await auth0.getSession();
   const user = await getUser(session!.user.sub);
+  const proLimits = getProLimits();
 
   return (
     <div className="space-y-6">
@@ -74,13 +68,16 @@ export default async function SubscriptionPage() {
                 <div className="mr-3 rounded-full p-1">
                   <Check className="h-4 w-4" />
                 </div>
-                <span>1,500 messages per month</span>
+                <span>{proLimits.messagesLimit} messages per month</span>
               </li>
               <li className="flex items-center">
                 <div className="mr-3 rounded-full p-1">
                   <Check className="h-4 w-4" />
                 </div>
-                <span>200 premium model messages per month</span>
+                <span>
+                  {proLimits.premiumMessagesLimit} premium model messages per
+                  month
+                </span>
               </li>
               <li className="flex items-center">
                 <div className="mr-3 rounded-full p-1">
