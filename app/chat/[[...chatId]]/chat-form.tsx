@@ -16,6 +16,7 @@ type Props = {
   threadId: string;
   defaultModel?: LlmModel;
   defaultModelParams?: ModelParams;
+  defaultText?: string;
   onProcessPegnaAIStream: (ask: AskModel) => Promise<void>;
   setRemainingLimits: (remainingLimits: number | undefined) => void;
 };
@@ -32,6 +33,7 @@ export default function ChatForm({
   defaultModelParams,
   onProcessPegnaAIStream,
   setRemainingLimits,
+  defaultText,
 }: Props) {
   const { register, handleSubmit, control, reset, setValue } =
     useForm<ChatFormInputs>({
@@ -53,6 +55,12 @@ export default function ChatForm({
       setValue("modelParams", defaultModelParams);
     }
   }, [defaultModel, defaultModelParams, setValue]);
+
+  useEffect(() => {
+    if (defaultText !== undefined) {
+      setValue("content", defaultText);
+    }
+  }, [defaultText, setValue]);
 
   const { navigateToChat } = useChatRouter();
 

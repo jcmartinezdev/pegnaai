@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import processPegnaAIStream from "@/lib/chat/ask-chat";
 import { AskModel } from "@/lib/chat/types";
 import ChatLimitBanner from "./chat-limit-banner";
+import ChatSuggestions from "./chat-suggestions";
 
 type ChatContainerProps = {
   isLoggedIn: boolean;
@@ -22,6 +23,7 @@ type ChatContainerProps = {
 
 export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
   const [remainingLimits, setRemainingLimits] = useState<number | undefined>();
+  const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
 
@@ -48,6 +50,10 @@ export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
   const messages = useLiveQuery(() => {
     return chatDB.getAllMessages(threadId);
   }, [threadId]);
+
+  function onSuggestionClick(suggestion: string) {
+    setSuggestion(suggestion);
+  }
 
   return (
     <>
@@ -78,6 +84,9 @@ export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
             aria-label="Chat messages"
             className="mx-auto max-w-4xl p-4 flex flex-col gap-4"
           >
+            {messages?.length === 0 && (
+              <ChatSuggestions onSuggestionClick={onSuggestionClick} />
+            )}
             {messages?.map((message) => (
               <div
                 key={message.id}
@@ -118,6 +127,7 @@ export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
 
           <ChatForm
             threadId={threadId}
+            defaultText={suggestion}
             defaultModel={thread?.model}
             defaultModelParams={thread?.modelParams}
             setRemainingLimits={setRemainingLimits}
