@@ -47,7 +47,12 @@ export function ModelPicker({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[300px]">
-        {isFreePlan(userPlan) && <UnlockAllBanner isLoggedIn={isLoggedIn} />}
+        {isFreePlan(userPlan) && (
+          <UnlockAllBanner
+            title="Unlock all models + more."
+            isLoggedIn={isLoggedIn}
+          />
+        )}
         {Object.entries(models).map(([key, model]) => (
           <DropdownMenuItem
             key={key}

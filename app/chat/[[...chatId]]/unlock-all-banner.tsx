@@ -6,9 +6,13 @@ import Link from "next/link";
 
 type ChatLimitBannerProps = {
   isLoggedIn: boolean;
+  title: string;
 };
 
-export default function UnlockAllBanner({ isLoggedIn }: ChatLimitBannerProps) {
+export default function UnlockAllBanner({
+  title,
+  isLoggedIn,
+}: ChatLimitBannerProps) {
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       const response = await startCheckoutFlow({
@@ -26,14 +30,14 @@ export default function UnlockAllBanner({ isLoggedIn }: ChatLimitBannerProps) {
   });
 
   return (
-    <div className="mx-auto max-w-4xl mb-4 bg-primary/10 px-5 py-2 shadow-lg font-bold backdrop-blur-md dark:border-red-800/20 dark:bg-red-700/20 dark:text-red-200 w-full space-y-2">
-      <p>Unlock all models + more.</p>
+    <div className="mx-auto max-w-4xl bg-primary/10 px-5 py-2 font-bold backdrop-blur-md dark:border-red-800/20 dark:bg-red-700/20 dark:text-red-200 w-full space-y-2">
+      <p>{title}</p>
       {isLoggedIn ? (
         <Button onClick={() => checkoutMutation.mutate()}>Upgrade Now!</Button>
       ) : (
         <Button variant="default" asChild>
           <Link href={`/auth/login?returnTo=${window.location.pathname}`}>
-            Log in to reset your limits. (It&apos;s free!)
+            Upgrade Now!
           </Link>
         </Button>
       )}

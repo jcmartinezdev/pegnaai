@@ -11,6 +11,10 @@ import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { AskModel, LlmModel, ModelParams, models } from "@/lib/chat/types";
 import { chatDB } from "@/lib/localDb";
+import { isFreePlan } from "@/lib/billing/account";
+import { Popover } from "@/components/ui/popover";
+import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
+import UnlockAllBanner from "./unlock-all-banner";
 
 type Props = {
   threadId: string;
@@ -159,7 +163,27 @@ export default function ChatForm({
               />
             )}
           />
-          {currentModel.allowSearch && (
+          {isFreePlan(userPlan) && currentModel.allowSearch && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
+                >
+                  <Globe />
+                  Search
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="rounded-lg overflow-hidden border-2">
+                <UnlockAllBanner
+                  title="Unlock web search with Pegna Pro."
+                  isLoggedIn={isLoggedIn}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+          {!isFreePlan(userPlan) && currentModel.allowSearch && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -194,7 +218,27 @@ export default function ChatForm({
               </Tooltip>
             </TooltipProvider>
           )}
-          {currentModel.allowReasoning && (
+          {isFreePlan(userPlan) && currentModel.allowReasoning && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
+                >
+                  <Brain />
+                  Think Hard
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="rounded-lg overflow-hidden border-2">
+                <UnlockAllBanner
+                  title="Unlock high reasoning with Pegna Pro."
+                  isLoggedIn={isLoggedIn}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+          {!isFreePlan(userPlan) && currentModel.allowReasoning && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
