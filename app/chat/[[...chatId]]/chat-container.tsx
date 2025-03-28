@@ -18,10 +18,14 @@ import ChatLimitBanner from "./chat-limit-banner";
 import ChatSuggestions from "./chat-suggestions";
 
 type ChatContainerProps = {
+  userPlan?: string;
   isLoggedIn: boolean;
 };
 
-export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
+export default function ChatContainer({
+  isLoggedIn,
+  userPlan,
+}: ChatContainerProps) {
   const [remainingLimits, setRemainingLimits] = useState<number | undefined>();
   const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
   const { threadId, navigateToChat } = useChatRouter();
@@ -126,6 +130,8 @@ export default function ChatContainer({ isLoggedIn }: ChatContainerProps) {
             )}
 
           <ChatForm
+            isLoggedIn={isLoggedIn}
+            userPlan={userPlan}
             threadId={threadId}
             defaultText={suggestion}
             defaultModel={thread?.model}

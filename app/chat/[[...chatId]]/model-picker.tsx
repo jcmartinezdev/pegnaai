@@ -14,13 +14,19 @@ import {
   TooltipTrigger,
 } from "@radix-ui/react-tooltip";
 import ModelIcon from "@/components/model-icon";
+import { isFreePlan } from "@/lib/billing/account";
+import UnlockAllBanner from "./unlock-all-banner";
 
 interface ModelPickerProps {
+  isLoggedIn: boolean;
+  userPlan?: string;
   selectedModel: LlmModel;
   onSelectModel: (model: LlmModel) => void;
 }
 
 export function ModelPicker({
+  isLoggedIn,
+  userPlan,
   selectedModel,
   onSelectModel,
 }: ModelPickerProps) {
@@ -41,9 +47,11 @@ export function ModelPicker({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[300px]">
+        {isFreePlan(userPlan) && <UnlockAllBanner isLoggedIn={isLoggedIn} />}
         {Object.entries(models).map(([key, model]) => (
           <DropdownMenuItem
             key={key}
+            disabled={model.requiresPro && isFreePlan(userPlan)}
             className="flex items-start gap-2 py-2 cursor-pointer"
             onClick={() => onSelectModel(key as LlmModel)}
           >

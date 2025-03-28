@@ -17,6 +17,8 @@ type Props = {
   defaultModel?: LlmModel;
   defaultModelParams?: ModelParams;
   defaultText?: string;
+  isLoggedIn: boolean;
+  userPlan?: string;
   onProcessPegnaAIStream: (ask: AskModel) => Promise<void>;
   setRemainingLimits: (remainingLimits: number | undefined) => void;
 };
@@ -31,9 +33,11 @@ export default function ChatForm({
   threadId,
   defaultModel,
   defaultModelParams,
+  defaultText,
+  isLoggedIn,
+  userPlan,
   onProcessPegnaAIStream,
   setRemainingLimits,
-  defaultText,
 }: Props) {
   const { register, handleSubmit, control, reset, setValue } =
     useForm<ChatFormInputs>({
@@ -142,6 +146,8 @@ export default function ChatForm({
             name="model"
             render={({ field }) => (
               <ModelPicker
+                isLoggedIn={isLoggedIn}
+                userPlan={userPlan}
                 selectedModel={field.value}
                 onSelectModel={field.onChange}
               />
