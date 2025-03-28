@@ -39,7 +39,7 @@ export default function ChatForm({
   onProcessPegnaAIStream,
   setRemainingLimits,
 }: Props) {
-  const { register, handleSubmit, control, reset, setValue } =
+  const { register, handleSubmit, control, reset, setValue, setFocus } =
     useForm<ChatFormInputs>({
       defaultValues: {
         model: defaultModel || "fast",
@@ -51,7 +51,12 @@ export default function ChatForm({
 
   useEffect(() => {
     setRemainingLimits(undefined);
+    setFocus("content");
   }, [model]);
+
+  useEffect(() => {
+    setFocus("content");
+  }, [threadId]);
 
   useEffect(() => {
     setValue("model", defaultModel || "fast");
@@ -63,6 +68,7 @@ export default function ChatForm({
   useEffect(() => {
     if (defaultText !== undefined) {
       setValue("content", defaultText);
+      setFocus("content");
     }
   }, [defaultText, setValue]);
 
