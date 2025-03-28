@@ -80,72 +80,11 @@ export default function SupportPage() {
                 <div className="rounded-lg border p-4">
                   <div className="flex items-center space-x-2">
                     <HelpCircle className="h-5 w-5" />
-                    <h4 className="font-medium">
-                      How do I upgrade my subscription?
-                    </h4>
+                    <h4 className="font-medium">Where are the FAQs?</h4>
                   </div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    You can upgrade your subscription by going to the
-                    Subscription tab in your Settings. Click on "Manage
-                    Subscription" and select the plan you'd like to upgrade to.
-                  </p>
-                </div>
-
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center space-x-2">
-                    <HelpCircle className="h-5 w-5" />
-                    <h4 className="font-medium">
-                      What happens when I reach my usage limit?
-                    </h4>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    When you reach your monthly usage limit, you'll still be
-                    able to use basic features, but premium model access will be
-                    restricted until the next billing cycle. You can upgrade
-                    your plan at any time to increase your limits.
-                  </p>
-                </div>
-
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center space-x-2">
-                    <HelpCircle className="h-5 w-5" />
-                    <h4 className="font-medium">
-                      How do I customize the AI's behavior?
-                    </h4>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    You can customize the AI's behavior in the AI Experience tab
-                    in Settings. There you can adjust personality traits,
-                    communication style, and add custom instructions.
-                  </p>
-                </div>
-
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center space-x-2">
-                    <HelpCircle className="h-5 w-5" />
-                    <h4 className="font-medium">Is my data secure?</h4>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Yes, we take data security seriously. All conversations are
-                    encrypted, and we never share your personal information with
-                    third parties. You can export or delete your data at any
-                    time from the Account tab in Settings.
-                  </p>
-                </div>
-
-                <div className="rounded-lg border p-4">
-                  <div className="flex items-center space-x-2">
-                    <HelpCircle className="h-5 w-5" />
-                    <h4 className="font-medium">
-                      How do I cancel my subscription?
-                    </h4>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    You can cancel your subscription by going to the
-                    Subscription tab in Settings and clicking "Manage
-                    Subscription." From there, select "Cancel Subscription."
-                    Your access will continue until the end of your current
-                    billing period.
+                    FAQs go here. This is a placeholder text for the FAQ
+                    section.
                   </p>
                 </div>
               </div>

@@ -8,21 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import {
-  User,
-  Shield,
-  Download,
-  Trash2,
-  LogOut,
-  Cloud,
-  Lock,
-  Smartphone,
-  AlertTriangle,
-  Laptop,
-} from "lucide-react";
+import { Download, Trash2, Cloud, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
 
 export default function SyncPage() {
   return (

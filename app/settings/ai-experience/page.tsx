@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Sparkles, Brain, MessageSquare, Save } from "lucide-react";
+import { Settings, Sparkles, Brain, Save } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function AIExperiencePage() {
@@ -212,9 +212,9 @@ export default function AIExperiencePage() {
                     className="min-h-[120px]"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Example: "Always provide code examples when explaining
-                    technical concepts" or "Keep explanations simple and avoid
-                    jargon"
+                    Example: &quot;Always provide code examples when explaining
+                    technical concepts&quot; or &quot;Keep explanations simple
+                    and avoid jargon&quot;
                   </p>
                 </div>
 

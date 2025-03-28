@@ -56,11 +56,11 @@ export default function ChatForm({
   useEffect(() => {
     setRemainingLimits(undefined);
     setFocus("content");
-  }, [model]);
+  }, [model, setRemainingLimits, setFocus]);
 
   useEffect(() => {
     setFocus("content");
-  }, [threadId]);
+  }, [threadId, setFocus]);
 
   useEffect(() => {
     setValue("model", defaultModel || "fast");
@@ -74,7 +74,7 @@ export default function ChatForm({
       setValue("content", defaultText);
       setFocus("content");
     }
-  }, [defaultText, setValue]);
+  }, [defaultText, setValue, setFocus]);
 
   const { navigateToChat } = useChatRouter();
 
