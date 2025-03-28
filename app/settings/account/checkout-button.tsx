@@ -27,6 +27,7 @@ export default function CheckoutButton() {
       size="lg"
       onClick={() => openCheckoutFlow.mutate()}
       disabled={openCheckoutFlow.isPending}
+      className="w-full"
     >
       Upgrade Now <ArrowRight className="ml-2 h-4 w-4" />
     </Button>

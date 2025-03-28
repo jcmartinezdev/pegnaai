@@ -89,7 +89,7 @@ export default function SyncPage() {
           </Alert>
 
           <div className="rounded-lg border border-destructive p-4">
-            <div className="flex items-center justify-between space-x-4">
+            <div className="flex flex-col md:flex-row items-center justify-between space-x-4">
               <div>
                 <h4 className="font-medium text-destructive">Delete Chats</h4>
                 <p className="text-sm text-muted-foreground">
@@ -98,8 +98,11 @@ export default function SyncPage() {
                   delete your account, nor your subscription and settings.
                 </p>
               </div>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
+              <Button
+                variant="destructive"
+                className="w-full md:w-auto mt-4 md:mt-0"
+              >
+                <Trash2 />
                 Delete All User Data
               </Button>
             </div>

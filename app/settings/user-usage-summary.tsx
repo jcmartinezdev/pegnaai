@@ -24,7 +24,7 @@ export default async function UserUsageSummary() {
         );
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 mx-4 md:mx-0">
       <CardHeader className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Usage Summary</h2>
         <Link

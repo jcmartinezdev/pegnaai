@@ -116,9 +116,9 @@ export default async function SubscriptionPage() {
       {isFreePlan(user?.planName) && (
         <Card className="bg-primary/5 border-primary/20">
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-col md:flex-row">
               <div className="flex items-center gap-x-4">
-                <Award className="mr-2 h-5 w-5 text-primary" />
+                <Award className="mr-2 h-5 w-5 text-primary flex-shrink-0" />
                 <div className="space-y-2">
                   <h3 className="text-xl font-medium flex items-center">
                     Ready to unlock the full potential?
@@ -128,7 +128,9 @@ export default async function SubscriptionPage() {
                   </p>
                 </div>
               </div>
-              <CheckoutButton />
+              <div className="mt-4 md:mt-0 w-full md:w-auto">
+                <CheckoutButton />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -155,15 +157,18 @@ export default async function SubscriptionPage() {
           </Alert>
 
           <div className="rounded-lg border border-destructive p-4">
-            <div className="flex items-center justify-between space-x-4">
+            <div className="flex flex-col md:flex-row items-center justify-between space-x-4">
               <div>
                 <h4 className="font-medium text-destructive">Delete Account</h4>
                 <p className="text-sm text-muted-foreground">
                   Permanently delete your account and all associated data.
                 </p>
               </div>
-              <Button variant="destructive">
-                <Trash2 className="mr-2 h-4 w-4" />
+              <Button
+                variant="destructive"
+                className="mt-4 md:mt-0 w-full md:w-auto"
+              >
+                <Trash2 />
                 Delete Account
               </Button>
             </div>
