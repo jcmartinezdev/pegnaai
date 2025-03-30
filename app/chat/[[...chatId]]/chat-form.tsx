@@ -46,7 +46,7 @@ export default function ChatForm({
   const { register, handleSubmit, control, reset, setValue, setFocus } =
     useForm<ChatFormInputs>({
       defaultValues: {
-        model: defaultModel || "fast",
+        model: defaultModel || "chat",
         modelParams: defaultModelParams || {},
       },
     });
@@ -63,7 +63,7 @@ export default function ChatForm({
   }, [threadId, setFocus]);
 
   useEffect(() => {
-    setValue("model", defaultModel || "fast");
+    setValue("model", defaultModel || "chat");
     if (defaultModelParams) {
       setValue("modelParams", defaultModelParams);
     }

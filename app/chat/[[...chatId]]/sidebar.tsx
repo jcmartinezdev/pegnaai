@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@auth0/nextjs-auth0/types";
 import Link from "next/link";
-import Image from "next/image";
 
 type ChatSidebarProps = {
   user?: User;
@@ -78,8 +77,7 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
             >
               <Link href="/settings">
                 {user.picture && (
-                  <Image
-                    loader={({ src }) => src}
+                  <img
                     alt="The user profile's picture"
                     className="size-8 rounded-full bg-primary/10"
                     src={user.picture}
