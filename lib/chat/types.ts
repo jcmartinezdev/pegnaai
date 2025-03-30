@@ -61,7 +61,7 @@ export type CustomMetadataType =
     };
 
 export interface FinishedStreamType {
-  finishReason?: "stop" | "length" | "content-filter" | "error";
+  finishReason?: "stop" | "length" | "content-filter" | "error" | "tool-calls";
   usage?: {
     promptTokens: number;
     completionTokens: number;

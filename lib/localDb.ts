@@ -20,6 +20,14 @@ export interface MessageModel {
   model: LlmModel;
   modelParams: ModelParams;
   content: string;
+  toolResponses?: {
+    toolCallId: string;
+    toolName: string;
+    generateImage: {
+      prompt?: string;
+      url?: string;
+    };
+  }[];
   reasoning?: string;
   searchMetadata?: SearchMetadata[];
   serverError?: {

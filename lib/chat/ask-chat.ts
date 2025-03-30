@@ -1,5 +1,6 @@
 "use client";
 
+import { ToolCallPart, ToolResultPart } from "ai";
 import { chatDB } from "../localDb";
 import {
   AskModel,
@@ -175,6 +176,70 @@ export default async function processPegnaAIStream(
           });
           break;
 
+        case "9": {
+          // Tool call
+          const data = content as unknown as ToolCallPart;
+          switch (data.toolName) {
+            case "generateImage":
+              const toolResult = data.args as unknown as {
+                prompt: string;
+              };
+              const toolResponses = currentMessage?.toolResponses || [];
+              toolResponses.push({
+                toolCallId: data.toolCallId,
+                toolName: data.toolName,
+                generateImage: {
+                  prompt: toolResult?.prompt,
+                },
+              });
+              await chatDB.messages.update(responseMessageId, {
+                toolResponses,
+              });
+              break;
+          }
+          break;
+        }
+
+        case "a": {
+          // Tool call result
+          const data = content as unknown as ToolResultPart;
+          const toolResult = data.result as unknown as {
+            imageUrl: string;
+          };
+          const toolResponses = currentMessage?.toolResponses || [];
+          const currentToolResponse = toolResponses.find(
+            (tr) => tr.toolCallId === data.toolCallId,
+          );
+          if (!currentToolResponse) {
+            console.error(
+              `[STREAM] Tool call result not found for ${data.toolCallId}`,
+            );
+            await chatDB.messages.update(responseMessageId, {
+              status: "error",
+              content: "Error generating the image. Please try again later.",
+            });
+            break;
+          }
+
+          const updatedToolResponses = toolResponses.map((tr) => {
+            if (tr.toolCallId === data.toolCallId) {
+              return {
+                ...tr,
+                generateImage: {
+                  ...tr.generateImage,
+                  url: toolResult.imageUrl,
+                },
+              };
+            }
+            return tr;
+          });
+
+          await chatDB.messages.update(responseMessageId, {
+            toolResponses: updatedToolResponses,
+          });
+          break;
+        }
+
         case "d":
           // Done
           try {
@@ -184,6 +249,7 @@ export default async function processPegnaAIStream(
 
             switch (finishReason) {
               case "stop":
+              case "tool-calls":
                 await chatDB.markMessageDone(responseMessageId, ask.threadId);
                 break;
               case "length":
