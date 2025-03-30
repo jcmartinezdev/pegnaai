@@ -67,7 +67,7 @@ const getModelSettings = (
   model: LlmModel,
   modelParams?: ModelParams,
 ): ModelSelectorItem => {
-  let settings = modelSettings[model];
+  const settings = modelSettings[model];
 
   const params = modelParams?.includeSearch
     ? "search"
