@@ -150,13 +150,13 @@ export async function POST(req: Request) {
     // Generate the chat title
     const { text: title } = await generateText({
       model: google("gemini-2.0-flash"),
-      system: `\n
-    - you will generate a short title based on the message
-    - you will generate the title in the same language as the prompt
-    - you will ensure the title is less than 80 characters
-    - you will ensure the title is a single sentence
-    - you will ensure the title is a summary of the user's message
-    - you will not use quotes, colons, slashes.`,
+      system: `You are a system that generate a summary title based on the following rules:
+- the title is in the same language as the content
+- ensure the title is less than 80 characters
+- ensure the title is a single sentence
+- ensure the title is a summary of the user's message
+- not use quotes, colons, slashes.
+`,
       prompt: messages[0].content,
     });
     generatedTitle = title;
