@@ -1,46 +1,23 @@
-import { chatDB, LlmModel, ModelParams, SearchMetadata } from "./localDb";
+"use client";
 
-type CustomMetadataType =
-  | {
-      type: "thread-metadata";
-      generatedTitle: string;
-    }
-  | {
-      type: "search-metadata";
-      value: SearchMetadata[];
-    };
+import { ToolCallPart, ToolResultPart } from "ai";
+import { chatDB } from "../localDb";
+import {
+  AskModel,
+  CustomMetadataType,
+  FinishedStreamType,
+  models,
+} from "./types";
 
-interface FinishedStreamType {
-  finishReason?: "stop" | "length" | "content-filter" | "error";
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-  };
-  isContinued?: boolean;
-}
-
-export interface AskMessagesModel {
-  id: string;
-  content: string;
-  role: "assistant" | "user" | "system";
-}
-
-export interface AskModel {
-  threadId: string;
-  generateTitle?: boolean;
-  model: LlmModel;
-  modelParams: ModelParams;
-  messages: AskMessagesModel[];
-}
-
-interface ResponseModel {
+interface ResponsePegnaAIStream {
   success: boolean;
+  remainingMessages?: number;
   error?: string;
 }
 
-export default async function askNextChat(
+export default async function processPegnaAIStream(
   ask: AskModel,
-): Promise<ResponseModel> {
+): Promise<ResponsePegnaAIStream> {
   const responseMessageId = await chatDB.addMessage({
     threadId: ask.threadId,
     content: "",
@@ -61,7 +38,28 @@ export default async function askNextChat(
   if (!response.ok) {
     console.error("[STREAM] Failed to fetch response", response);
 
-    const result = await response.json();
+    let result = {
+      type: "internal_server_error",
+      message: "Internal Server Error",
+    };
+    try {
+      result = await response.json();
+    } catch {}
+
+    if (result.type === "rate_limit") {
+      await chatDB.messages.update(responseMessageId, {
+        status: "error",
+        content: result.message,
+        serverError: result,
+      });
+
+      return {
+        success: false,
+        error: result.message,
+        remainingMessages: 0,
+      };
+    }
+
     await chatDB.messages.update(responseMessageId, {
       status: "error",
       content: "Failed to fetch response",
@@ -95,6 +93,7 @@ export default async function askNextChat(
     };
   }
   const textDecoder = new TextDecoder();
+  let remainingMessages: number | undefined = undefined;
 
   while (true) {
     const { done, value } = await reader.read();
@@ -153,6 +152,11 @@ export default async function askNextChat(
                       searchMetadata: data.value,
                     });
                     break;
+                  case "rate-limit":
+                    remainingMessages = models[ask.model].isPremium
+                      ? data.value.remainingPremiumMessages
+                      : data.value.remainingMessages;
+                    break;
                 }
                 break;
               }
@@ -172,6 +176,70 @@ export default async function askNextChat(
           });
           break;
 
+        case "9": {
+          // Tool call
+          const data = content as unknown as ToolCallPart;
+          switch (data.toolName) {
+            case "generateImage":
+              const toolResult = data.args as unknown as {
+                prompt: string;
+              };
+              const toolResponses = currentMessage?.toolResponses || [];
+              toolResponses.push({
+                toolCallId: data.toolCallId,
+                toolName: data.toolName,
+                generateImage: {
+                  prompt: toolResult?.prompt,
+                },
+              });
+              await chatDB.messages.update(responseMessageId, {
+                toolResponses,
+              });
+              break;
+          }
+          break;
+        }
+
+        case "a": {
+          // Tool call result
+          const data = content as unknown as ToolResultPart;
+          const toolResult = data.result as unknown as {
+            imageUrl: string;
+          };
+          const toolResponses = currentMessage?.toolResponses || [];
+          const currentToolResponse = toolResponses.find(
+            (tr) => tr.toolCallId === data.toolCallId,
+          );
+          if (!currentToolResponse) {
+            console.error(
+              `[STREAM] Tool call result not found for ${data.toolCallId}`,
+            );
+            await chatDB.messages.update(responseMessageId, {
+              status: "error",
+              content: "Error generating the image. Please try again later.",
+            });
+            break;
+          }
+
+          const updatedToolResponses = toolResponses.map((tr) => {
+            if (tr.toolCallId === data.toolCallId) {
+              return {
+                ...tr,
+                generateImage: {
+                  ...tr.generateImage,
+                  url: toolResult.imageUrl,
+                },
+              };
+            }
+            return tr;
+          });
+
+          await chatDB.messages.update(responseMessageId, {
+            toolResponses: updatedToolResponses,
+          });
+          break;
+        }
+
         case "d":
           // Done
           try {
@@ -181,6 +249,7 @@ export default async function askNextChat(
 
             switch (finishReason) {
               case "stop":
+              case "tool-calls":
                 await chatDB.markMessageDone(responseMessageId, ask.threadId);
                 break;
               case "length":
@@ -214,6 +283,7 @@ export default async function askNextChat(
                 return {
                   success: false,
                   error: "Unknown finish reason",
+                  remainingMessages,
                 };
             }
           } catch (error) {
@@ -225,6 +295,7 @@ export default async function askNextChat(
             return {
               success: false,
               error: "Error parsing data chunk JSON",
+              remainingMessages,
             };
           }
           break;
@@ -234,5 +305,6 @@ export default async function askNextChat(
 
   return {
     success: true,
+    remainingMessages,
   };
 }

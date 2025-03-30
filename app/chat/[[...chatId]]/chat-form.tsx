@@ -1,8 +1,6 @@
-import askNextChat from "@/lib/chat";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SubmitHandler, useForm } from "react-hook-form";
-import { chatDB, LlmModel, ModelParams, models } from "@/lib/localDb";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useChatRouter } from "@/lib/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";
@@ -11,11 +9,22 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { AskModel, LlmModel, ModelParams, models } from "@/lib/chat/types";
+import { chatDB } from "@/lib/localDb";
+import { isFreePlan } from "@/lib/billing/account";
+import { Popover } from "@/components/ui/popover";
+import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
+import UnlockAllBanner from "./unlock-all-banner";
 
 type Props = {
   threadId: string;
   defaultModel?: LlmModel;
   defaultModelParams?: ModelParams;
+  defaultText?: string;
+  isLoggedIn: boolean;
+  userPlan?: string;
+  onProcessPegnaAIStream: (ask: AskModel) => Promise<void>;
+  setRemainingLimits: (remainingLimits: number | undefined) => void;
 };
 
 type ChatFormInputs = {
@@ -28,21 +37,44 @@ export default function ChatForm({
   threadId,
   defaultModel,
   defaultModelParams,
+  defaultText,
+  isLoggedIn,
+  userPlan,
+  onProcessPegnaAIStream,
+  setRemainingLimits,
 }: Props) {
-  const { register, handleSubmit, control, reset, watch, setValue } =
+  const { register, handleSubmit, control, reset, setValue, setFocus } =
     useForm<ChatFormInputs>({
       defaultValues: {
-        model: defaultModel || "fast",
+        model: defaultModel || "chat",
         modelParams: defaultModelParams || {},
       },
     });
 
+  const model = useWatch({ control, name: "model" });
+
   useEffect(() => {
-    setValue("model", defaultModel || "fast");
+    setRemainingLimits(undefined);
+    setFocus("content");
+  }, [model, setRemainingLimits, setFocus]);
+
+  useEffect(() => {
+    setFocus("content");
+  }, [threadId, setFocus]);
+
+  useEffect(() => {
+    setValue("model", defaultModel || "chat");
     if (defaultModelParams) {
       setValue("modelParams", defaultModelParams);
     }
   }, [defaultModel, defaultModelParams, setValue]);
+
+  useEffect(() => {
+    if (defaultText !== undefined) {
+      setValue("content", defaultText);
+      setFocus("content");
+    }
+  }, [defaultText, setValue, setFocus]);
 
   const { navigateToChat } = useChatRouter();
 
@@ -73,7 +105,7 @@ export default function ChatForm({
       modelParams,
     });
 
-    askNextChat({
+    onProcessPegnaAIStream({
       threadId: saveThreadId,
       model: data.model,
       modelParams: data.modelParams,
@@ -87,7 +119,7 @@ export default function ChatForm({
     });
   };
 
-  const currentModel = models[watch("model")];
+  const currentModel = models[model];
 
   return (
     <form
@@ -124,12 +156,34 @@ export default function ChatForm({
             name="model"
             render={({ field }) => (
               <ModelPicker
+                isLoggedIn={isLoggedIn}
+                userPlan={userPlan}
                 selectedModel={field.value}
                 onSelectModel={field.onChange}
               />
             )}
           />
-          {currentModel.allowSearch && (
+          {isFreePlan(userPlan) && currentModel.allowSearch && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
+                >
+                  <Globe />
+                  Search
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="rounded-lg overflow-hidden border-2">
+                <UnlockAllBanner
+                  title="Unlock web search with Pegna Pro."
+                  isLoggedIn={isLoggedIn}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+          {!isFreePlan(userPlan) && currentModel.allowSearch && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -164,7 +218,27 @@ export default function ChatForm({
               </Tooltip>
             </TooltipProvider>
           )}
-          {currentModel.allowReasoning && (
+          {isFreePlan(userPlan) && currentModel.allowReasoning && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="default"
+                  className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
+                >
+                  <Brain />
+                  Think Hard
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="rounded-lg overflow-hidden border-2">
+                <UnlockAllBanner
+                  title="Unlock high reasoning with Pegna Pro."
+                  isLoggedIn={isLoggedIn}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+          {!isFreePlan(userPlan) && currentModel.allowReasoning && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

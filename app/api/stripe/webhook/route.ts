@@ -4,7 +4,7 @@ import {
   getUserByStripeCustomerId,
   updateUser,
 } from "@/db/queries";
-import { stripe } from "@/lib/stripe";
+import { stripe } from "@/lib/billing/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 

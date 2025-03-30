@@ -6,13 +6,14 @@ import { CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2 } from "lucide-react";
 import MarkdownContent from "@/components/markdown-content";
+import Image from "next/image";
 
 type Props = {
   message: MessageModel;
 };
 
 export default function ChatContent({
-  message: { content, reasoning, searchMetadata, status },
+  message: { content, toolResponses, reasoning, searchMetadata, status },
 }: Props) {
   return (
     <div>
@@ -37,6 +38,25 @@ export default function ChatContent({
         )}
         <MarkdownContent content={content} />
       </div>
+      {toolResponses?.map((toolResponse) => {
+        if (toolResponse.generateImage?.url) {
+          return (
+            <div
+              key={toolResponse.toolCallId}
+              className="relative mt-2 flex w-full flex-col"
+            >
+              <div className="w-full justify-between rounded-lg p-4 bg-secondary">
+                <Image
+                  width={512}
+                  height={512}
+                  src={toolResponse.generateImage.url}
+                  alt={toolResponse.generateImage?.prompt || "Generated image"}
+                />
+              </div>
+            </div>
+          );
+        }
+      })}
       {searchMetadata && (
         <Card className="gap-2 mt-6">
           <CardHeader>
