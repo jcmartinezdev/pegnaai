@@ -150,19 +150,20 @@ export async function POST(req: Request) {
     // Generate the chat title
     const { text: title } = await generateText({
       model: google("gemini-2.0-flash"),
-      system: `\n
-    - you will generate a short title based on the message
-    - you will generate the title in the same language as the prompt
-    - you will ensure the title is less than 80 characters
-    - you will ensure the title is a single sentence
-    - you will ensure the title is a summary of the user's message
-    - you will not use quotes, colons, slashes.`,
+      system: `You are a system that generate a summary title based on the following rules:
+- the title is in the same language as the content
+- ensure the title is less than 80 characters
+- ensure the title is a single sentence
+- ensure the title is a summary of the user's message
+- not use quotes, colons, slashes.
+`,
       prompt: messages[0].content,
     });
     generatedTitle = title;
   }
 
   const session = await auth0.getSession();
+  const user = await getUser(session?.user.sub || "unknown");
   const currentModel = models[model];
 
   const limits = await getUserLimits(session?.user.sub);
@@ -179,7 +180,6 @@ export async function POST(req: Request) {
     modelParams?.reasoningEffort === "high"
   ) {
     if (session) {
-      const user = await getUser(session.user.sub);
       if (!isFreePlan(user?.planName)) {
         hasAccess = true;
       }
@@ -240,13 +240,13 @@ export async function POST(req: Request) {
       remainingMessages = Number(cookieStore.get(RATE_LIMIT_COOKIE)?.value);
 
       if (remainingMessages <= 0) {
-        // return new Response(
-        //   JSON.stringify({
-        //     message: "You have reached your message limit",
-        //     type: "rate_limit",
-        //   }),
-        //   { status: 429 },
-        // );
+        return new Response(
+          JSON.stringify({
+            message: "You have reached your message limit",
+            type: "rate_limit",
+          }),
+          { status: 429 },
+        );
       }
       remainingMessages--;
     } else {
@@ -274,7 +274,7 @@ export async function POST(req: Request) {
       }
 
       const tools: Record<string, Tool> = {};
-      if (session?.user) {
+      if (!isFreePlan(user?.planName)) {
         tools.generateImage = tool({
           description: "Generate an image",
           parameters: z.object({
@@ -282,7 +282,7 @@ export async function POST(req: Request) {
           }),
           execute: async ({ prompt }) => {
             // Upload image to S3 with user-specific path
-            const userId = session.user.sub;
+            const userId = session!.user.sub;
             const key = `users/${userId}/${crypto.randomUUID()}.png`;
 
             const { image } = await experimental_generateImage({
@@ -290,7 +290,7 @@ export async function POST(req: Request) {
               prompt,
             });
             // Increment the usage for a premium model for the user
-            await incrementUserUsageForUser(session.user.sub, true);
+            await incrementUserUsageForUser(session!.user.sub, true);
 
             // The image is already a base64 string from experimental_generateImage
             const imageBuffer = Buffer.from(image.base64, "base64");
