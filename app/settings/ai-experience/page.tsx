@@ -6,13 +6,14 @@ import { userAIExperienceTable } from "@/db/schema";
 export default async function AIExperiencePage() {
   const session = await auth0.getSession();
   const aiExperience: typeof userAIExperienceTable.$inferSelect =
-    (await getAIExperienceSettings(session!.user.sub)) || {
+    (await getAIExperienceSettings(session!.user.sub)) ||
+    ({
       id: session!.user.sub,
       name: session!.user.name,
       role: "",
       about: "",
       customInstructions: "",
       traits: [],
-    };
+    } as typeof userAIExperienceTable.$inferSelect);
   return <AIExperienceForm aiExperience={aiExperience} />;
 }

@@ -83,11 +83,11 @@ export default function ChatContainer({
         </div>
       </header>
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
-        <ChatScrollContainer>
+        <ChatScrollContainer messagesCount={messages?.length || 0}>
           {messages?.length === 0 && (
             <ChatSuggestions onSuggestionClick={onSuggestionClick} />
           )}
-          {messages?.map((message) => (
+          {messages?.map((message, i) => (
             <div
               key={message.id}
               data-chat-id={message.id}
@@ -98,7 +98,14 @@ export default function ChatContainer({
               ])}
             >
               <div
-                className={`max-w-[80%] p-2 rounded-xl text-left p-2 ${message.role === "user" ? "bg-accent" : ""}`}
+                className={cn(
+                  "max-w-[80%] p-2 rounded-xl text-left p-2",
+                  message.role === "user" && "bg-accent",
+                  messages &&
+                    messages.length > 2 &&
+                    i === messages.length - 1 &&
+                    "min-h-[calc(100vh-20rem)]",
+                )}
               >
                 {message.status == "error" ? (
                   <div>{message.content}</div>

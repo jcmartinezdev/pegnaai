@@ -1,15 +1,18 @@
-import { MessageModel } from "@/lib/localDb";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChatSuggestions from "./chat-suggestions";
-import { cn } from "@/lib/utils";
-import ChatContent from "./chat-content";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 
+type ChatScrollContainerProps = {
+  children: React.ReactNode;
+  messagesCount: number;
+};
+
 export default function ChatScrollContainer({
   children,
-}: {
+  messagesCount,
+}: ChatScrollContainerProps & {
   children: React.ReactNode;
+  messagesCount: number;
 }) {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -17,6 +20,16 @@ export default function ChatScrollContainer({
   useEffect(() => {
     setShowScrollButton(false);
   }, []);
+
+  // Scroll to the bottom when the component mounts or when messagesCount changes
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "instant",
+      });
+    }
+  }, [messagesContainerRef, messagesCount]);
 
   const handleScroll = useCallback(() => {
     if (messagesContainerRef.current) {
@@ -30,24 +43,22 @@ export default function ChatScrollContainer({
 
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.addEventListener("scroll", handleScroll);
+      const elRef = messagesContainerRef.current;
+      elRef.addEventListener("scroll", handleScroll);
       return () => {
-        messagesContainerRef.current?.removeEventListener(
-          "scroll",
-          handleScroll,
-        );
+        elRef.removeEventListener("scroll", handleScroll);
       };
     }
-  }, [messagesContainerRef]);
+  }, [messagesContainerRef, handleScroll]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTo({
         top: messagesContainerRef.current.scrollHeight,
         behavior: "smooth",
       });
     }
-  };
+  }, [messagesContainerRef]);
 
   return (
     <div ref={messagesContainerRef} className="overflow-y-auto pb-48">
