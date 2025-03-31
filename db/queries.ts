@@ -198,7 +198,7 @@ export function getProLimits() {
  */
 export async function getAIExperienceSettings(
   userId: string,
-): Promise<typeof userAIExperienceTable.$inferSelect> {
+): Promise<typeof userAIExperienceTable.$inferSelect | undefined> {
   const settings = await db
     .select()
     .from(userAIExperienceTable)
