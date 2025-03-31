@@ -2,7 +2,7 @@
 
 import { and, eq, sql } from "drizzle-orm";
 import { db } from ".";
-import { usersTable, userUsagesTable } from "./schema";
+import { userAIExperienceTable, usersTable, userUsagesTable } from "./schema";
 import { isFreePlan } from "@/lib/billing/account";
 
 /**
@@ -187,4 +187,41 @@ export function getProLimits() {
     messagesLimit: 1500,
     premiumMessagesLimit: 200,
   };
+}
+
+/**
+ * Get AI Experience settings for a user
+ *
+ * @param userId - The user ID
+ *
+ * @returns The AI Experience settings for the user
+ */
+export async function getAIExperienceSettings(
+  userId: string,
+): Promise<typeof userAIExperienceTable.$inferSelect> {
+  const settings = await db
+    .select()
+    .from(userAIExperienceTable)
+    .where(eq(userAIExperienceTable.id, userId))
+    .limit(1);
+
+  return settings[0];
+}
+
+export async function saveAIExperienceSettings(
+  aiExperience: typeof userAIExperienceTable.$inferInsert,
+) {
+  await db
+    .insert(userAIExperienceTable)
+    .values(aiExperience)
+    .onConflictDoUpdate({
+      target: [userAIExperienceTable.id],
+      set: {
+        name: aiExperience.name,
+        role: aiExperience.role,
+        about: aiExperience.about,
+        customInstructions: aiExperience.customInstructions,
+        traits: aiExperience.traits,
+      },
+    });
 }

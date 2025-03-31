@@ -1,9 +1,10 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   integer,
   pgEnum,
   pgTable,
   primaryKey,
+  text,
   varchar,
 } from "drizzle-orm/pg-core";
 
@@ -15,6 +16,18 @@ export const usersTable = pgTable("users", {
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   subscriptionStatus: varchar("subscription_status", { length: 25 }),
+});
+
+export const userAIExperienceTable = pgTable("user_ai_experience", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  role: varchar("role", { length: 100 }).notNull(),
+  about: text("about").notNull(),
+  customInstructions: text("custom_instructions").notNull(),
+  traits: text("traits")
+    .array()
+    .notNull()
+    .default(sql`ARRAY[]::text[]`),
 });
 
 export const userRelations = relations(usersTable, ({ many }) => ({

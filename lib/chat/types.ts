@@ -1,5 +1,38 @@
 export type LlmModel = "chat" | "code";
 
+export const traits = [
+  {
+    value: "friendly",
+    label: "Friendly",
+    description: "Warm and approachable",
+  },
+  {
+    value: "professional",
+    label: "Professional",
+    description: "Formal and business-like",
+  },
+  {
+    value: "creative",
+    label: "Creative",
+    description: "Imaginative and original",
+  },
+  {
+    value: "concise",
+    label: "Concise",
+    description: "Brief and to the point",
+  },
+  {
+    value: "humorous",
+    label: "Humorous",
+    description: "Witty and entertaining",
+  },
+  {
+    value: "analytical",
+    label: "Analytical",
+    description: "Logical and detailed",
+  },
+];
+
 type ModelType = {
   name: string;
   description: string;
