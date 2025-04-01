@@ -10,8 +10,10 @@ export interface ThreadModel {
   modelParams: ModelParams;
   pinned: boolean;
   lastMessageAt: Date;
+  createdAt: Date;
   updatedAt: Date;
   status: "active" | "deleted";
+  synced?: boolean;
 }
 
 export interface MessageModel {
@@ -36,7 +38,9 @@ export interface MessageModel {
   };
   role: "assistant" | "user" | "system";
   createdAt: Date;
+  updatedAt: Date;
   status: "done" | "deleted" | "streaming" | "cancelled" | "error";
+  synced?: boolean;
 }
 
 export class ChatDB extends Dexie {
@@ -86,18 +90,24 @@ export class ChatDB extends Dexie {
       id: crypto.randomUUID(),
       pinned: false,
       lastMessageAt: new Date(),
+      createdAt: new Date(),
       updatedAt: new Date(),
       status: "active",
+      synced: false,
     });
   }
 
-  async addMessage(message: Omit<MessageModel, "id" | "createdAt">) {
+  async addMessage(
+    message: Omit<MessageModel, "id" | "createdAt" | "updatedAt">,
+  ) {
     return this.transaction("rw", [this.threads, this.messages], async () => {
       const date = new Date();
       const newMessage = await this.messages.add({
         ...message,
         id: crypto.randomUUID(),
         createdAt: date,
+        updatedAt: date,
+        synced: false,
       });
 
       await chatDB.threads.update(message.threadId, {
@@ -105,6 +115,7 @@ export class ChatDB extends Dexie {
         modelParams: message.modelParams,
         lastMessageAt: date,
         updatedAt: date,
+        synced: false,
       });
 
       return newMessage;
@@ -124,17 +135,21 @@ export class ChatDB extends Dexie {
           content:
             ((await this.messages.get(messageId))?.content || "") +
             appendContent,
+          synced: false,
+          updatedAt: date,
         });
       } else {
         await this.messages.update(messageId, {
           status: "done",
+          synced: false,
+          updatedAt: date,
         });
       }
 
       await chatDB.threads.update(threadId, {
         updatedAt: date,
         lastMessageAt: date,
-        status: "active",
+        synced: false,
       });
     });
   }

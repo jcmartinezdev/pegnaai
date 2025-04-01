@@ -1,8 +1,14 @@
 "only server";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from ".";
-import { userAIExperienceTable, usersTable, userUsagesTable } from "./schema";
+import {
+  messagesTable,
+  threadsTable,
+  userAIExperienceTable,
+  usersTable,
+  userUsagesTable,
+} from "./schema";
 import { isFreePlan } from "@/lib/billing/account";
 
 /**
@@ -208,6 +214,13 @@ export async function getAIExperienceSettings(
   return settings[0];
 }
 
+/**
+ * Save AI Experience settings for a user
+ *
+ * @param aiExperience - The AI Experience settings
+ *
+ * @returns The saved AI Experience settings
+ */
 export async function saveAIExperienceSettings(
   aiExperience: typeof userAIExperienceTable.$inferInsert,
 ) {
@@ -224,4 +237,156 @@ export async function saveAIExperienceSettings(
         traits: aiExperience.traits,
       },
     });
+}
+
+/**
+ * Get all threads for a user
+ *
+ * @param userId - The user ID
+ * @param threadIds - The thread IDs to filter by (optional)
+ *
+ * @returns The threads for the user
+ */
+export async function getThreadsForUser(userId: string, threadIds?: string[]) {
+  const threads = await db
+    .select()
+    .from(threadsTable)
+    .where(
+      threadIds
+        ? and(
+            eq(threadsTable.userId, userId),
+            inArray(threadsTable.localId, threadIds),
+          )
+        : eq(threadsTable.userId, userId),
+    );
+
+  return threads;
+}
+
+/**
+ * Get all threads for a user and last sync date
+ *
+ * @param userId - The user ID
+ * @param lastSyncDate - The last sync date
+ *
+ * @returns The threads for the user
+ */
+export async function getThreadsToSync(userId: string, lastSyncDate: Date) {
+  const threads = await db
+    .select()
+    .from(threadsTable)
+    .where(
+      and(
+        eq(threadsTable.userId, userId),
+        lt(threadsTable.updatedAt, lastSyncDate),
+      ),
+    );
+
+  return threads;
+}
+
+/**
+ * Create or update a thread
+ *
+ * @param thread - The thread to create or update
+ *
+ * @returns The created or updated thread
+ */
+export async function createOrUpdateThread(
+  thread: typeof threadsTable.$inferInsert,
+) {
+  return db
+    .insert(threadsTable)
+    .values(thread)
+    .onConflictDoUpdate({
+      target: [threadsTable.userId, threadsTable.localId],
+      set: {
+        title: thread.title,
+        model: thread.model,
+        modelParams: thread.modelParams,
+        pinned: thread.pinned,
+        lastMessageAt: thread.lastMessageAt,
+        updatedAt: thread.updatedAt,
+        status: thread.status,
+      },
+    });
+}
+
+/**
+ * Get all messages for a user
+ *
+ * @param userId - The user ID
+ * @param messagesIds - The message IDs to filter by (optional)
+ *
+ * @returns The messages for the user
+ */
+export async function getMessagesForUser(
+  userId: string,
+  messagesIds?: string[],
+) {
+  const messages = await db
+    .select()
+    .from(messagesTable)
+    .where(
+      messagesIds
+        ? and(
+            eq(messagesTable.userId, userId),
+            inArray(messagesTable.localId, messagesIds),
+          )
+        : eq(messagesTable.userId, userId),
+    );
+
+  return messages;
+}
+
+/**
+ * Create or update a message
+ *
+ * @param message - The message to create or update
+ *
+ * @returns The created or updated message
+ */
+export async function createOrUpdateMessage(
+  message: typeof messagesTable.$inferInsert,
+) {
+  return db
+    .insert(messagesTable)
+    .values(message)
+    .onConflictDoUpdate({
+      target: [threadsTable.userId, threadsTable.localId],
+      set: {
+        model: message.model,
+        modelParams: message.modelParams,
+        content: message.content,
+        toolResponses: message.toolResponses,
+        reasoning: message.reasoning,
+        searchMetadata: message.searchMetadata,
+        serverError: message.serverError,
+        role: message.role,
+        updatedAt: message.updatedAt,
+        status: message.status,
+      },
+    });
+}
+
+/**
+ * Get all messages for a user and last sync date
+ *
+ * @param userId - The user ID
+ * @param lastSyncDate - The last sync date
+ *
+ * @returns The threads for the user
+ */
+export async function getMessagesToSync(userId: string, lastSyncDate: Date) {
+  const threads = await db
+    .select()
+    .from(messagesTable)
+    .where(
+      and(
+        eq(messagesTable.userId, userId),
+        lt(messagesTable.updatedAt, lastSyncDate),
+      ),
+    );
+
+  return threads;
 }
