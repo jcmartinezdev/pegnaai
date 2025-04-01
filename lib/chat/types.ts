@@ -76,6 +76,15 @@ export type SearchMetadata = {
   snippet: string;
 };
 
+export type ToolResponse = {
+  toolCallId: string;
+  toolName: string;
+  generateImage: {
+    prompt?: string;
+    url?: string;
+  };
+};
+
 export type CustomMetadataType =
   | {
       type: "thread-metadata";

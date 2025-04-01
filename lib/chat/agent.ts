@@ -1,3 +1,5 @@
+"only server";
+
 import { getAIExperienceSettings } from "@/db/queries";
 import { isFreePlan } from "../billing/account";
 

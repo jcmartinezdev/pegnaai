@@ -7,11 +7,12 @@ CREATE TABLE "messages" (
 	"model_params" json NOT NULL,
 	"content" text NOT NULL,
 	"tool_responses" json NOT NULL,
-	"reasoning" text NOT NULL,
-	"search_metadata" json NOT NULL,
-	"server_error" json NOT NULL,
+	"reasoning" text,
+	"search_metadata" json,
+	"server_error" json,
 	"role" varchar(20) NOT NULL,
 	"created_at" timestamp with time zone NOT NULL,
+	"updated_at" timestamp with time zone NOT NULL,
 	"status" varchar(20),
 	CONSTRAINT "messages_user_id_local_id_pk" PRIMARY KEY("user_id","local_id")
 );
@@ -24,6 +25,7 @@ CREATE TABLE "threads" (
 	"model_params" json NOT NULL,
 	"pinned" boolean DEFAULT false NOT NULL,
 	"last_message_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL,
 	"status" varchar(20),
 	CONSTRAINT "threads_user_id_local_id_pk" PRIMARY KEY("user_id","local_id")

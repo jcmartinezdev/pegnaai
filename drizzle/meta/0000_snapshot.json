@@ -1,5 +1,5 @@
 {
-  "id": "ce808de4-35c6-4f7b-b9ee-4dcc2e87b2bb",
+  "id": "99fec989-8404-4ceb-b2ef-722f09204880",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -54,19 +54,19 @@
           "name": "reasoning",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "search_metadata": {
           "name": "search_metadata",
           "type": "json",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "server_error": {
           "name": "server_error",
           "type": "json",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "role": {
           "name": "role",
@@ -76,6 +76,12 @@
         },
         "created_at": {
           "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
@@ -146,6 +152,12 @@
         },
         "last_message_at": {
           "name": "last_message_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true

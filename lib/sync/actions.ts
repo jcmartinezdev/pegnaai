@@ -34,10 +34,24 @@ export async function syncData(
 
   const userId = session.user.sub;
 
+  // Verify that the user coming from the FE matches the user doing the sync
+  const threadsUserMismatch = threads.some(
+    (thread) => thread.userId !== userId,
+  );
+  const messagesUserMismatch = messages.some(
+    (message) => message.userId !== userId,
+  );
+  if (threadsUserMismatch || messagesUserMismatch) {
+    return {
+      success: false,
+      error: "User not authorized to sync these records",
+    };
+  }
+
   let updatedThreads = 0;
   let updatedMessages = 0;
 
-  const operations: Promise<any>[] = [];
+  const operations = [];
   //
   // Now let's sync the threads
   //

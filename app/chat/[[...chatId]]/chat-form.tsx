@@ -103,6 +103,7 @@ export default function ChatForm({
       status: "done",
       model: data.model,
       modelParams,
+      synced: false,
     });
 
     onProcessPegnaAIStream({

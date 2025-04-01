@@ -25,6 +25,7 @@ export default async function processPegnaAIStream(
     status: "streaming",
     model: ask.model,
     modelParams: ask.modelParams,
+    synced: false,
   });
 
   const response = await fetch("/api/chat", {

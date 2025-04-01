@@ -1,7 +1,12 @@
 "use client";
 
 import Dexie, { type EntityTable } from "dexie";
-import { LlmModel, ModelParams, SearchMetadata } from "./chat/types";
+import {
+  LlmModel,
+  ModelParams,
+  SearchMetadata,
+  ToolResponse,
+} from "./chat/types";
 
 export interface ThreadModel {
   id: string;
@@ -13,7 +18,7 @@ export interface ThreadModel {
   createdAt: Date;
   updatedAt: Date;
   status: "active" | "deleted";
-  synced?: boolean;
+  synced: boolean;
 }
 
 export interface MessageModel {
@@ -22,14 +27,7 @@ export interface MessageModel {
   model: LlmModel;
   modelParams: ModelParams;
   content: string;
-  toolResponses?: {
-    toolCallId: string;
-    toolName: string;
-    generateImage: {
-      prompt?: string;
-      url?: string;
-    };
-  }[];
+  toolResponses?: ToolResponse[];
   reasoning?: string;
   searchMetadata?: SearchMetadata[];
   serverError?: {
@@ -40,7 +38,7 @@ export interface MessageModel {
   createdAt: Date;
   updatedAt: Date;
   status: "done" | "deleted" | "streaming" | "cancelled" | "error";
-  synced?: boolean;
+  synced: boolean;
 }
 
 export class ChatDB extends Dexie {
@@ -82,7 +80,13 @@ export class ChatDB extends Dexie {
   async createThread(
     thread: Omit<
       ThreadModel,
-      "id" | "lastMessageAt" | "updatedAt" | "pinned" | "status"
+      | "id"
+      | "lastMessageAt"
+      | "updatedAt"
+      | "pinned"
+      | "status"
+      | "createdAt"
+      | "synced"
     >,
   ) {
     return this.threads.add({
@@ -151,6 +155,46 @@ export class ChatDB extends Dexie {
         lastMessageAt: date,
         synced: false,
       });
+    });
+  }
+
+  async getThreadsToSync() {
+    return this.threads.where("synced").equals("false");
+  }
+
+  async getMessagesToSync() {
+    return this.messages.where("synced").equals("false");
+  }
+
+  async updateThreads(threads: ThreadModel[]) {
+    return this.transaction("rw", [this.threads], async () => {
+      for (const thread of threads) {
+        if (this.threads.get(thread.id) === undefined) {
+          await this.threads.add({
+            ...thread,
+          });
+        } else {
+          await this.threads.update(thread.id, {
+            ...thread,
+          });
+        }
+      }
+    });
+  }
+
+  async updateMessages(messages: MessageModel[]) {
+    return this.transaction("rw", [this.messages], async () => {
+      for (const message of messages) {
+        if (this.messages.get(message.id) === undefined) {
+          await this.messages.add({
+            ...message,
+          });
+        } else {
+          await this.messages.update(message.id, {
+            ...message,
+          });
+        }
+      }
     });
   }
 }

@@ -59,6 +59,16 @@ describe("syncData", () => {
   });
 
   describe("Threads - Push", () => {
+    it("should return an error if the user is not authorized to sync threads", async () => {
+      const threads = createSampleThreads(5, () => ({
+        userId: "otherUserId",
+      }));
+      const result = await syncData(threads, [], new Date());
+      expect(result.success).toEqual(false);
+      expect(result.error).toEqual("User not authorized to sync these records");
+      expect(createOrUpdateThread).toHaveBeenCalledTimes(0);
+    });
+
     it("should not update any threads if there are no changes", async () => {
       const result = await syncData([], [], new Date());
       expect(result.success).toEqual(true);
@@ -144,6 +154,16 @@ describe("syncData", () => {
   });
 
   describe("Messages - Push", () => {
+    it("should return an error if the user is not authorized to sync messages", async () => {
+      const messages = createSampleMessages(5, () => ({
+        userId: "otherUserId",
+      }));
+      const result = await syncData([], messages, new Date());
+      expect(result.success).toEqual(false);
+      expect(result.error).toEqual("User not authorized to sync these records");
+      expect(createOrUpdateMessage).toHaveBeenCalledTimes(0);
+    });
+
     it("should not update any messages if there are no changes", async () => {
       const result = await syncData([], [], new Date());
       expect(result.success).toEqual(true);

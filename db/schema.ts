@@ -98,9 +98,9 @@ export const messagesTable = pgTable(
     modelParams: json("model_params").notNull(),
     content: text("content").notNull(),
     toolResponses: json("tool_responses").notNull(),
-    reasoning: text("reasoning").notNull(),
-    searchMetadata: json("search_metadata").notNull(),
-    serverError: json("server_error").notNull(),
+    reasoning: text("reasoning"),
+    searchMetadata: json("search_metadata"),
+    serverError: json("server_error"),
     role: varchar("role", { length: 20 }).notNull(),
     createdAt: timestamp("created_at", {
       mode: "date",

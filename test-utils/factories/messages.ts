@@ -14,13 +14,14 @@ const createDefaultDbMessageData = (): typeof messagesTable.$inferSelect => {
     model: "chat" as LlmModel,
     modelParams: {},
     content: faker.lorem.paragraphs({ min: 4, max: 10 }),
+    toolResponses: null,
     reasoning: faker.lorem.paragraphs({ min: 1, max: 3 }),
-    searchMetadata: {},
-    serverError: {},
+    searchMetadata: null,
+    serverError: null,
+    role: "user",
     createdAt: new Date(),
     updatedAt: new Date(),
     status: "active",
-    role: "user",
   };
 };
 
