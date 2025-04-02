@@ -6,7 +6,7 @@ CREATE TABLE "messages" (
 	"model" varchar(20) NOT NULL,
 	"model_params" json NOT NULL,
 	"content" text NOT NULL,
-	"tool_responses" json NOT NULL,
+	"tool_responses" json,
 	"reasoning" text,
 	"search_metadata" json,
 	"server_error" json,

@@ -125,7 +125,7 @@ describe("Local Sync", () => {
 
     await localSyncData("test-user-id");
 
-    expect(chatDB.updateThreads).toHaveBeenCalledTimes(1);
+    expect(chatDB.updateThreads).toHaveBeenCalledTimes(2);
     expect(chatDB.updateThreads).toHaveBeenCalledWith(
       expect.objectContaining({ length: totalThreadsToSyncToLocal }),
     );
@@ -134,7 +134,7 @@ describe("Local Sync", () => {
         expect.objectContaining({
           id: expect.stringMatching(/(.|\s)*\S(.|\s)*/),
           model: "chat",
-          synced: true,
+          synced: 1,
         }),
       ]),
     );
@@ -164,7 +164,7 @@ describe("Local Sync", () => {
 
     await localSyncData("test-user-id");
 
-    expect(chatDB.updateMessages).toHaveBeenCalledTimes(1);
+    expect(chatDB.updateMessages).toHaveBeenCalledTimes(2);
     expect(chatDB.updateMessages).toHaveBeenCalledWith(
       expect.objectContaining({ length: totalMessagesToSyncToLocal }),
     );
@@ -173,7 +173,7 @@ describe("Local Sync", () => {
         expect.objectContaining({
           id: expect.stringMatching(/(.|\s)*\S(.|\s)*/),
           model: "chat",
-          synced: true,
+          synced: 1,
         }),
       ]),
     );

@@ -18,7 +18,7 @@ export interface ThreadModel {
   createdAt: Date;
   updatedAt: Date;
   status: "active" | "deleted";
-  synced: boolean;
+  synced: number;
 }
 
 export interface MessageModel {
@@ -38,7 +38,7 @@ export interface MessageModel {
   createdAt: Date;
   updatedAt: Date;
   status: "done" | "deleted" | "streaming" | "cancelled" | "error";
-  synced: boolean;
+  synced: number;
 }
 
 export class ChatDB extends Dexie {
@@ -48,8 +48,8 @@ export class ChatDB extends Dexie {
   constructor() {
     super("chatdb");
     this.version(1).stores({
-      threads: "id, createdAt, status",
-      messages: "id, threadId, createdAt, status",
+      threads: "id, createdAt, status, synced",
+      messages: "id, threadId, createdAt, status, synced",
       limits: "id",
     });
 
@@ -97,7 +97,7 @@ export class ChatDB extends Dexie {
       createdAt: new Date(),
       updatedAt: new Date(),
       status: "active",
-      synced: false,
+      synced: 0,
     });
   }
 
@@ -111,7 +111,7 @@ export class ChatDB extends Dexie {
         id: crypto.randomUUID(),
         createdAt: date,
         updatedAt: date,
-        synced: false,
+        synced: 0,
       });
 
       await chatDB.threads.update(message.threadId, {
@@ -119,7 +119,7 @@ export class ChatDB extends Dexie {
         modelParams: message.modelParams,
         lastMessageAt: date,
         updatedAt: date,
-        synced: false,
+        synced: 0,
       });
 
       return newMessage;
@@ -139,13 +139,13 @@ export class ChatDB extends Dexie {
           content:
             ((await this.messages.get(messageId))?.content || "") +
             appendContent,
-          synced: false,
+          synced: 0,
           updatedAt: date,
         });
       } else {
         await this.messages.update(messageId, {
           status: "done",
-          synced: false,
+          synced: 0,
           updatedAt: date,
         });
       }
@@ -153,17 +153,17 @@ export class ChatDB extends Dexie {
       await chatDB.threads.update(threadId, {
         updatedAt: date,
         lastMessageAt: date,
-        synced: false,
+        synced: 0,
       });
     });
   }
 
   async getThreadsToSync() {
-    return this.threads.where("synced").equals("false");
+    return await this.threads.where("synced").equals(0).sortBy("updatedAt");
   }
 
   async getMessagesToSync() {
-    return this.messages.where("synced").equals("false");
+    return await this.messages.where("synced").equals(0).sortBy("updatedAt");
   }
 
   async updateThreads(threads: ThreadModel[]) {

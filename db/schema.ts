@@ -97,7 +97,7 @@ export const messagesTable = pgTable(
     model: varchar("model", { length: 20 }).notNull(),
     modelParams: json("model_params").notNull(),
     content: text("content").notNull(),
-    toolResponses: json("tool_responses").notNull(),
+    toolResponses: json("tool_responses"),
     reasoning: text("reasoning"),
     searchMetadata: json("search_metadata"),
     serverError: json("server_error"),

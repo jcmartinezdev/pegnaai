@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Download, Trash2, Cloud, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import SyncButton from "./sync-button";
 
 export default function SyncPage() {
   return (
@@ -46,6 +47,7 @@ export default function SyncPage() {
           <div className="space-y-4">
             <h3 className="text-base font-medium">Data Management</h3>
             <div className="flex flex-wrap gap-4">
+              <SyncButton />
               <Button variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Export Conversations

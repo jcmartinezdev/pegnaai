@@ -13,16 +13,17 @@ export async function localSyncData(userId?: string) {
   if (!userId) {
     return;
   }
+  console.log("[SYNC] Sync started ...");
   const threads = await chatDB.getThreadsToSync();
   const messages = await chatDB.getMessagesToSync();
 
-  const toServerThreads = (await threads.toArray()).map((thread) => ({
+  const toServerThreads = threads.map((thread) => ({
     ...thread,
     localId: thread.id,
     userId,
   }));
 
-  const toServerMessages = (await messages.toArray()).map((message) => ({
+  const toServerMessages = messages.map((message) => ({
     ...message,
     localId: message.id,
     userId,
@@ -39,8 +40,8 @@ export async function localSyncData(userId?: string) {
 
   // Sync data with the server
   console.log("[SYNC] Syncing data with the server...", {
-    messages: messages.count(),
-    threads: threads.count(),
+    messages: messages.length,
+    threads: threads.length,
   });
 
   const response = await syncData(
@@ -60,6 +61,21 @@ export async function localSyncData(userId?: string) {
     throw new Error("No data received from the server");
   }
 
+  // Update the local database with items as synced
+  await chatDB.updateThreads(
+    threads.map((thread) => ({
+      ...thread,
+      synced: 1,
+    })),
+  );
+
+  await chatDB.updateMessages(
+    messages.map((message) => ({
+      ...message,
+      synced: 1,
+    })),
+  );
+
   const { threads: serverThreads, messages: serverMessages } = response.data;
   await chatDB.updateThreads(
     serverThreads.map((thread) => ({
@@ -68,7 +84,7 @@ export async function localSyncData(userId?: string) {
       model: thread.model as LlmModel,
       modelParams: thread.modelParams as ModelParams,
       status: thread.status as "active" | "deleted",
-      synced: true,
+      synced: 1,
     })),
   );
   await chatDB.updateMessages(
@@ -84,7 +100,7 @@ export async function localSyncData(userId?: string) {
       reasoning: message.reasoning || undefined,
       status: message.status as "done" | "deleted" | "streaming" | "cancelled",
       role: message.role as "assistant" | "user" | "system",
-      synced: true,
+      synced: 1,
     })),
   );
 

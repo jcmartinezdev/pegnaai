@@ -1,5 +1,5 @@
 {
-  "id": "99fec989-8404-4ceb-b2ef-722f09204880",
+  "id": "842e55fc-8214-473b-babe-994dc5cd6a8c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -48,7 +48,7 @@
           "name": "tool_responses",
           "type": "json",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "reasoning": {
           "name": "reasoning",

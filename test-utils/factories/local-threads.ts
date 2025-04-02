@@ -17,7 +17,7 @@ const createDefaultLocalThread = (): ThreadModel => {
     createdAt: new Date(),
     updatedAt: new Date(),
     status: "active",
-    synced: false,
+    synced: 0,
   };
 };
 
@@ -35,15 +35,7 @@ export const createSampleLocalThreads = (
   count: number,
   overrideFn?: (index: number) => Partial<ThreadModel>,
 ) => {
-  return {
-    toArray: () =>
-      new Promise<ThreadModel[]>((resolve) => {
-        return resolve(
-          Array.from({ length: count }, (_, i) =>
-            createSampleLocalThread(overrideFn ? overrideFn(i) : {}),
-          ),
-        );
-      }),
-    count: () => count,
-  };
+  return Array.from({ length: count }, (_, i) =>
+    createSampleLocalThread(overrideFn ? overrideFn(i) : {}),
+  );
 };

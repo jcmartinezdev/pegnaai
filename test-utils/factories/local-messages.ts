@@ -36,15 +36,7 @@ export const createSampleLocalMessages = (
   count: number,
   overrideFn?: (index: number) => Partial<MessageModel>,
 ) => {
-  return {
-    toArray: () =>
-      new Promise<MessageModel[]>((resolve) => {
-        return resolve(
-          Array.from({ length: count }, (_, i) =>
-            createSampleLocalMessage(overrideFn ? overrideFn(i) : {}),
-          ),
-        );
-      }),
-    count: () => count,
-  };
+  return Array.from({ length: count }, (_, i) =>
+    createSampleLocalMessage(overrideFn ? overrideFn(i) : {}),
+  );
 };
