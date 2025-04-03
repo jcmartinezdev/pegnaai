@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  console.log("Webhook event received:", event.type);
+
   switch (event.type) {
     case "checkout.session.completed":
       // Payment is successful
@@ -41,6 +43,12 @@ export async function POST(req: NextRequest) {
         typeof checkoutSession.subscription === "string"
           ? checkoutSession.subscription
           : checkoutSession.subscription!.id;
+
+      console.log("Checkout session completed:", {
+        checkoutUserId,
+        checkoutCustomerId,
+        checkoutSubscriptionId,
+      });
 
       const user = await getUser(checkoutUserId);
       if (!user) {
@@ -72,6 +80,13 @@ export async function POST(req: NextRequest) {
       const userFromDb = await getUserByStripeCustomerId(
         subscriptionCustomerId,
       );
+
+      console.log("Subscription updated/deleted:", {
+        userFromDb: userFromDb?.id,
+        stripeCustomerId: subscriptionCustomerId,
+        stripeSubscriptionId: subscription.id,
+        subscriptionStatus: subscriptionStatus,
+      });
 
       updateUser(userFromDb.id, {
         planName: subscriptionStatus === "active" ? "pro" : "free",
