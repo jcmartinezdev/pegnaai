@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
-import { useChatRouter } from "@/lib/chatRouter";
+import { useChatRouter } from "@/lib/chat/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";
 import { FormField } from "@/components/ui/form";
@@ -103,13 +103,14 @@ export default function ChatForm({
       status: "done",
       model: data.model,
       modelParams,
+      synced: 0,
     });
 
     onProcessPegnaAIStream({
       threadId: saveThreadId,
       model: data.model,
       modelParams: data.modelParams,
-      messages: await chatDB.getAllMessages(saveThreadId),
+      messages: await chatDB.getAllMessagesForThread(saveThreadId),
       generateTitle: generateTitle ? true : undefined,
     });
 

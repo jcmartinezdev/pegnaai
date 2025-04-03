@@ -3,7 +3,7 @@
 import { MessageSquare, Plus } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/localDb";
-import { useChatRouter } from "@/lib/chatRouter";
+import { useChatRouter } from "@/lib/chat/chatRouter";
 import {
   Sidebar,
   SidebarContent,

@@ -1,8 +1,14 @@
 "only server";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from ".";
-import { usersTable, userUsagesTable } from "./schema";
+import {
+  messagesTable,
+  threadsTable,
+  userAIExperienceTable,
+  usersTable,
+  userUsagesTable,
+} from "./schema";
 import { isFreePlan } from "@/lib/billing/account";
 
 /**
@@ -41,10 +47,25 @@ export async function getUserByStripeCustomerId(stripeCustomerId: string) {
   return users[0];
 }
 
+/**
+ * Create a new user
+ *
+ * @param user - The user data to create
+ *
+ * @returns The created user
+ */
 export async function createUser(user: typeof usersTable.$inferInsert) {
   return db.insert(usersTable).values(user);
 }
 
+/**
+ * Update a user by their ID
+ *
+ * @param id - The user ID
+ * @param user - The user data to update
+ *
+ * @returns The updated user
+ */
 export async function updateUser(
   id: string,
   user: Omit<typeof usersTable.$inferInsert, "id">,
@@ -187,4 +208,210 @@ export function getProLimits() {
     messagesLimit: 1500,
     premiumMessagesLimit: 200,
   };
+}
+
+/**
+ * Get AI Experience settings for a user
+ *
+ * @param userId - The user ID
+ *
+ * @returns The AI Experience settings for the user
+ */
+export async function getAIExperienceSettings(
+  userId: string,
+): Promise<typeof userAIExperienceTable.$inferSelect | undefined> {
+  const settings = await db
+    .select()
+    .from(userAIExperienceTable)
+    .where(eq(userAIExperienceTable.id, userId))
+    .limit(1);
+
+  return settings[0];
+}
+
+/**
+ * Save AI Experience settings for a user
+ *
+ * @param aiExperience - The AI Experience settings
+ *
+ * @returns The saved AI Experience settings
+ */
+export async function saveAIExperienceSettings(
+  aiExperience: typeof userAIExperienceTable.$inferInsert,
+) {
+  await db
+    .insert(userAIExperienceTable)
+    .values(aiExperience)
+    .onConflictDoUpdate({
+      target: [userAIExperienceTable.id],
+      set: {
+        name: aiExperience.name,
+        role: aiExperience.role,
+        about: aiExperience.about,
+        customInstructions: aiExperience.customInstructions,
+        traits: aiExperience.traits,
+      },
+    });
+}
+
+/**
+ * Get all threads for a user
+ *
+ * @param userId - The user ID
+ * @param threadIds - The thread IDs to filter by (optional)
+ *
+ * @returns The threads for the user
+ */
+export async function getThreadsForUser(userId: string, threadIds?: string[]) {
+  const threads = await db
+    .select()
+    .from(threadsTable)
+    .where(
+      threadIds
+        ? and(
+            eq(threadsTable.userId, userId),
+            inArray(threadsTable.localId, threadIds),
+          )
+        : eq(threadsTable.userId, userId),
+    );
+
+  return threads;
+}
+
+/**
+ * Get all threads for a user and last sync date
+ *
+ * @param userId - The user ID
+ * @param lastSyncDate - The last sync date
+ *
+ * @returns The threads for the user
+ */
+export async function getThreadsToSync(userId: string, lastSyncDate: Date) {
+  const threads = await db
+    .select()
+    .from(threadsTable)
+    .where(
+      and(
+        eq(threadsTable.userId, userId),
+        gt(threadsTable.updatedAt, lastSyncDate),
+      ),
+    );
+
+  return threads;
+}
+
+/**
+ * Create or update a thread
+ *
+ * @param thread - The thread to create or update
+ *
+ * @returns The created or updated thread
+ */
+export async function createOrUpdateThread(
+  thread: typeof threadsTable.$inferInsert,
+) {
+  return db
+    .insert(threadsTable)
+    .values(thread)
+    .onConflictDoUpdate({
+      target: [threadsTable.userId, threadsTable.localId],
+      set: {
+        title: thread.title,
+        model: thread.model,
+        modelParams: thread.modelParams,
+        pinned: thread.pinned,
+        lastMessageAt: thread.lastMessageAt,
+        updatedAt: thread.updatedAt,
+        status: thread.status,
+      },
+    });
+}
+
+/**
+ * Get all messages for a user
+ *
+ * @param userId - The user ID
+ * @param messagesIds - The message IDs to filter by (optional)
+ *
+ * @returns The messages for the user
+ */
+export async function getMessagesForUser(
+  userId: string,
+  messagesIds?: string[],
+) {
+  const messages = await db
+    .select()
+    .from(messagesTable)
+    .where(
+      messagesIds
+        ? and(
+            eq(messagesTable.userId, userId),
+            inArray(messagesTable.localId, messagesIds),
+          )
+        : eq(messagesTable.userId, userId),
+    );
+
+  return messages;
+}
+
+/**
+ * Create or update a message
+ *
+ * @param message - The message to create or update
+ *
+ * @returns The created or updated message
+ */
+export async function createOrUpdateMessage(
+  message: typeof messagesTable.$inferInsert,
+) {
+  return db
+    .insert(messagesTable)
+    .values(message)
+    .onConflictDoUpdate({
+      target: [threadsTable.userId, threadsTable.localId],
+      set: {
+        model: message.model,
+        modelParams: message.modelParams,
+        content: message.content,
+        toolResponses: message.toolResponses,
+        reasoning: message.reasoning,
+        searchMetadata: message.searchMetadata,
+        serverError: message.serverError,
+        role: message.role,
+        updatedAt: message.updatedAt,
+        status: message.status,
+      },
+    });
+}
+
+/**
+ * Get all messages for a user and last sync date
+ *
+ * @param userId - The user ID
+ * @param lastSyncDate - The last sync date
+ *
+ * @returns The threads for the user
+ */
+export async function getMessagesToSync(userId: string, lastSyncDate: Date) {
+  const messages = await db
+    .select()
+    .from(messagesTable)
+    .where(
+      and(
+        eq(messagesTable.userId, userId),
+        gt(messagesTable.updatedAt, lastSyncDate),
+      ),
+    );
+
+  return messages;
+}
+
+/**
+ * Clear all sync data for a user
+ *
+ * @param userId - The user ID
+ */
+export async function clearAllSyncDataForUser(userId: string) {
+  await db.delete(messagesTable).where(eq(messagesTable.userId, userId));
+  await db.delete(threadsTable).where(eq(threadsTable.userId, userId));
 }

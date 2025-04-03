@@ -1,7 +1,12 @@
 "use client";
 
 import Dexie, { type EntityTable } from "dexie";
-import { LlmModel, ModelParams, SearchMetadata } from "./chat/types";
+import {
+  LlmModel,
+  ModelParams,
+  SearchMetadata,
+  ToolResponse,
+} from "./chat/types";
 
 export interface ThreadModel {
   id: string;
@@ -10,8 +15,10 @@ export interface ThreadModel {
   modelParams: ModelParams;
   pinned: boolean;
   lastMessageAt: Date;
+  createdAt: Date;
   updatedAt: Date;
   status: "active" | "deleted";
+  synced: number;
 }
 
 export interface MessageModel {
@@ -20,14 +27,7 @@ export interface MessageModel {
   model: LlmModel;
   modelParams: ModelParams;
   content: string;
-  toolResponses?: {
-    toolCallId: string;
-    toolName: string;
-    generateImage: {
-      prompt?: string;
-      url?: string;
-    };
-  }[];
+  toolResponses?: ToolResponse[];
   reasoning?: string;
   searchMetadata?: SearchMetadata[];
   serverError?: {
@@ -36,7 +36,9 @@ export interface MessageModel {
   };
   role: "assistant" | "user" | "system";
   createdAt: Date;
+  updatedAt: Date;
   status: "done" | "deleted" | "streaming" | "cancelled" | "error";
+  synced: number;
 }
 
 export class ChatDB extends Dexie {
@@ -46,8 +48,8 @@ export class ChatDB extends Dexie {
   constructor() {
     super("chatdb");
     this.version(1).stores({
-      threads: "id, createdAt, status",
-      messages: "id, threadId, createdAt, status",
+      threads: "id, createdAt, status, synced",
+      messages: "id, threadId, createdAt, status, synced",
       limits: "id",
     });
 
@@ -67,7 +69,15 @@ export class ChatDB extends Dexie {
     return await this.threads.get(threadId);
   }
 
-  async getAllMessages(threadId: string) {
+  async getAllMessages() {
+    return await this.messages
+      .where("status")
+      .notEqual("deleted")
+      .reverse()
+      .sortBy("createdAt");
+  }
+
+  async getAllMessagesForThread(threadId: string) {
     return await this.messages
       .where("threadId")
       .equals(threadId)
@@ -78,7 +88,13 @@ export class ChatDB extends Dexie {
   async createThread(
     thread: Omit<
       ThreadModel,
-      "id" | "lastMessageAt" | "updatedAt" | "pinned" | "status"
+      | "id"
+      | "lastMessageAt"
+      | "updatedAt"
+      | "pinned"
+      | "status"
+      | "createdAt"
+      | "synced"
     >,
   ) {
     return this.threads.add({
@@ -86,18 +102,24 @@ export class ChatDB extends Dexie {
       id: crypto.randomUUID(),
       pinned: false,
       lastMessageAt: new Date(),
+      createdAt: new Date(),
       updatedAt: new Date(),
       status: "active",
+      synced: 0,
     });
   }
 
-  async addMessage(message: Omit<MessageModel, "id" | "createdAt">) {
+  async addMessage(
+    message: Omit<MessageModel, "id" | "createdAt" | "updatedAt">,
+  ) {
     return this.transaction("rw", [this.threads, this.messages], async () => {
       const date = new Date();
       const newMessage = await this.messages.add({
         ...message,
         id: crypto.randomUUID(),
         createdAt: date,
+        updatedAt: date,
+        synced: 0,
       });
 
       await chatDB.threads.update(message.threadId, {
@@ -105,6 +127,7 @@ export class ChatDB extends Dexie {
         modelParams: message.modelParams,
         lastMessageAt: date,
         updatedAt: date,
+        synced: 0,
       });
 
       return newMessage;
@@ -124,18 +147,69 @@ export class ChatDB extends Dexie {
           content:
             ((await this.messages.get(messageId))?.content || "") +
             appendContent,
+          synced: 0,
+          updatedAt: date,
         });
       } else {
         await this.messages.update(messageId, {
           status: "done",
+          synced: 0,
+          updatedAt: date,
         });
       }
 
       await chatDB.threads.update(threadId, {
         updatedAt: date,
         lastMessageAt: date,
-        status: "active",
+        synced: 0,
       });
+    });
+  }
+
+  async getThreadsToSync() {
+    return await this.threads.where("synced").equals(0).sortBy("updatedAt");
+  }
+
+  async getMessagesToSync() {
+    return await this.messages.where("synced").equals(0).sortBy("updatedAt");
+  }
+
+  async updateThreads(threads: ThreadModel[]) {
+    return this.transaction("rw", [this.threads], async () => {
+      for (const thread of threads) {
+        if ((await this.threads.get(thread.id)) === undefined) {
+          await this.threads.add({
+            ...thread,
+          });
+        } else {
+          await this.threads.update(thread.id, {
+            ...thread,
+          });
+        }
+      }
+    });
+  }
+
+  async updateMessages(messages: MessageModel[]) {
+    return this.transaction("rw", [this.messages], async () => {
+      for (const message of messages) {
+        if ((await this.messages.get(message.id)) === undefined) {
+          await this.messages.add({
+            ...message,
+          });
+        } else {
+          await this.messages.update(message.id, {
+            ...message,
+          });
+        }
+      }
+    });
+  }
+
+  async clearAllData() {
+    return this.transaction("rw", [this.threads, this.messages], async () => {
+      await this.threads.clear();
+      await this.messages.clear();
     });
   }
 }

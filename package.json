@@ -10,7 +10,9 @@
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "npx drizzle-kit migrate",
-    "db:start": "docker run --name pegnaai -e POSTGRES_PASSWORD=pegnaai -e POSTGRES_USER=pegnaai -e POSTGRES_DB=pegnaai -p 5432:5432 -d postgres"
+    "db:start": "docker run --name pegnaai -e POSTGRES_PASSWORD=pegnaai -e POSTGRES_USER=pegnaai -e POSTGRES_DB=pegnaai -p 5432:5432 -d postgres",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.2",
@@ -20,6 +22,7 @@
     "@aws-sdk/client-s3": "^3.777.0",
     "@hookform/resolvers": "^4.1.3",
     "@neondatabase/serverless": "^1.0.0",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-checkbox": "^1.1.4",
     "@radix-ui/react-collapsible": "^1.1.3",
     "@radix-ui/react-dialog": "^1.1.6",
@@ -59,8 +62,13 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@faker-js/faker": "^9.6.0",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.16",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
@@ -69,7 +77,10 @@
     "drizzle-kit": "^0.30.6",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.3",
     "typescript": "^5"
   }

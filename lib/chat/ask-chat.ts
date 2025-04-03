@@ -25,6 +25,7 @@ export default async function processPegnaAIStream(
     status: "streaming",
     model: ask.model,
     modelParams: ask.modelParams,
+    synced: 0,
   });
 
   const response = await fetch("/api/chat", {
@@ -51,6 +52,8 @@ export default async function processPegnaAIStream(
         status: "error",
         content: result.message,
         serverError: result,
+        synced: 0,
+        updatedAt: new Date(),
       });
 
       return {
@@ -64,6 +67,8 @@ export default async function processPegnaAIStream(
       status: "error",
       content: "Failed to fetch response",
       serverError: result,
+      synced: 0,
+      updatedAt: new Date(),
     });
 
     return {
@@ -85,6 +90,8 @@ export default async function processPegnaAIStream(
         message: "No reader available from response.",
         type: "no_reader",
       },
+      synced: 0,
+      updatedAt: new Date(),
     });
 
     return {
@@ -121,6 +128,8 @@ export default async function processPegnaAIStream(
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
             status: "streaming",
+            synced: 0,
+            updatedAt: new Date(),
           });
           break;
 
@@ -131,6 +140,8 @@ export default async function processPegnaAIStream(
             reasoning:
               (currentMessage?.reasoning || "") + content.replace(/^"|"$/g, ""),
             status: "streaming",
+            synced: 0,
+            updatedAt: new Date(),
           });
           break;
 
@@ -145,11 +156,15 @@ export default async function processPegnaAIStream(
                   case "thread-metadata":
                     await chatDB.threads.update(ask.threadId, {
                       title: data.generatedTitle,
+                      synced: 0,
+                      updatedAt: new Date(),
                     });
                     break;
                   case "search-metadata":
                     await chatDB.messages.update(responseMessageId, {
                       searchMetadata: data.value,
+                      synced: 0,
+                      updatedAt: new Date(),
                     });
                     break;
                   case "rate-limit":
@@ -173,6 +188,8 @@ export default async function processPegnaAIStream(
             content:
               (currentMessage?.content || "") + content.replace(/^"|"$/g, ""),
             status: "error",
+            synced: 0,
+            updatedAt: new Date(),
           });
           break;
 
@@ -194,6 +211,8 @@ export default async function processPegnaAIStream(
               });
               await chatDB.messages.update(responseMessageId, {
                 toolResponses,
+                synced: 0,
+                updatedAt: new Date(),
               });
               break;
           }
@@ -217,6 +236,8 @@ export default async function processPegnaAIStream(
             await chatDB.messages.update(responseMessageId, {
               status: "error",
               content: "Error generating the image. Please try again later.",
+              synced: 0,
+              updatedAt: new Date(),
             });
             break;
           }
@@ -236,6 +257,8 @@ export default async function processPegnaAIStream(
 
           await chatDB.messages.update(responseMessageId, {
             toolResponses: updatedToolResponses,
+            synced: 0,
+            updatedAt: new Date(),
           });
           break;
         }
@@ -270,6 +293,8 @@ export default async function processPegnaAIStream(
                 await chatDB.messages.update(responseMessageId, {
                   status: "error",
                   content: "Error processing the request. Please try again.",
+                  synced: 0,
+                  updatedAt: new Date(),
                 });
                 return {
                   success: false,
@@ -279,6 +304,8 @@ export default async function processPegnaAIStream(
                 await chatDB.messages.update(responseMessageId, {
                   status: "error",
                   content: "Error processing the request. Please try again.",
+                  synced: 0,
+                  updatedAt: new Date(),
                 });
                 return {
                   success: false,
@@ -291,6 +318,8 @@ export default async function processPegnaAIStream(
             await chatDB.messages.update(responseMessageId, {
               status: "error",
               content: "Error processing the request. Please try again.",
+              synced: 0,
+              updatedAt: new Date(),
             });
             return {
               success: false,

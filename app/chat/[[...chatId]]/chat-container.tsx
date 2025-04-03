@@ -4,18 +4,20 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { useChatRouter } from "@/lib/chatRouter";
+import { useChatRouter } from "@/lib/chat/chatRouter";
 import { chatDB } from "@/lib/localDb";
-import { cn } from "@/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
-import ChatContent from "./chat-content";
 import ChatForm from "./chat-form";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import processPegnaAIStream from "@/lib/chat/ask-chat";
 import { AskModel } from "@/lib/chat/types";
 import ChatLimitBanner from "./chat-limit-banner";
+import ChatScrollContainer from "./chat-scroll-container";
 import ChatSuggestions from "./chat-suggestions";
+import { cn } from "@/lib/utils";
+import ChatContent from "./chat-content";
+import { SyncDataContext } from "@/components/sync-data-provider";
 
 type ChatContainerProps = {
   userPlan?: string;
@@ -30,6 +32,7 @@ export default function ChatContainer({
   const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
+  const syncEngine = useContext(SyncDataContext);
 
   // When the user selects a new chat, let's clear the remaining limits
   useEffect(() => {
@@ -38,6 +41,9 @@ export default function ChatContainer({
 
   async function onProcessPegnaAIStream(ask: AskModel) {
     const response = await processPegnaAIStream(ask);
+    // Sync after sending a message
+    syncEngine?.start();
+    // Set the remaining limits
     setRemainingLimits(response.remainingMessages);
   }
 
@@ -52,7 +58,7 @@ export default function ChatContainer({
   }, [threadId]);
 
   const messages = useLiveQuery(() => {
-    return chatDB.getAllMessages(threadId);
+    return chatDB.getAllMessagesForThread(threadId);
   }, [threadId]);
 
   function onSuggestionClick(suggestion: string) {
@@ -82,37 +88,39 @@ export default function ChatContainer({
         </div>
       </header>
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
-        <div className="overflow-y-auto pb-48">
-          <div
-            role="log"
-            aria-label="Chat messages"
-            className="mx-auto max-w-4xl p-4 flex flex-col gap-4"
-          >
-            {messages?.length === 0 && (
-              <ChatSuggestions onSuggestionClick={onSuggestionClick} />
-            )}
-            {messages?.map((message) => (
+        <ChatScrollContainer messagesCount={messages?.length || 0}>
+          {messages?.length === 0 && (
+            <ChatSuggestions onSuggestionClick={onSuggestionClick} />
+          )}
+          {messages?.map((message, i) => (
+            <div
+              key={message.id}
+              data-chat-id={message.id}
+              className={cn([
+                `flex ${message.role === "user" ? "justify-end" : "justify-start"}`,
+                message.status === "error" &&
+                  "bg-red-500/5 text-red-800 dark:text-red-200",
+              ])}
+            >
               <div
-                key={message.id}
-                className={cn([
-                  `flex ${message.role === "user" ? "justify-end" : "justify-start"}`,
-                  message.status === "error" &&
-                    "bg-red-500/5 text-red-800 dark:text-red-200",
-                ])}
+                className={cn(
+                  "max-w-[80%] p-2 rounded-xl text-left p-2",
+                  message.role === "user" && "bg-accent",
+                  messages &&
+                    messages.length > 2 &&
+                    i === messages.length - 1 &&
+                    "min-h-[calc(100vh-20rem)]",
+                )}
               >
-                <div
-                  className={`max-w-[80%] p-2 rounded-xl text-left p-2 ${message.role === "user" ? "bg-accent" : ""}`}
-                >
-                  {message.status == "error" ? (
-                    <div>{message.content}</div>
-                  ) : (
-                    <ChatContent message={message} />
-                  )}
-                </div>
+                {message.status == "error" ? (
+                  <div>{message.content}</div>
+                ) : (
+                  <ChatContent message={message} />
+                )}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))}
+        </ChatScrollContainer>
         <div className="absolute bottom-0 w-full px-4">
           {remainingLimits === 0 && (
             <ChatLimitBanner

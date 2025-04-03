@@ -1,13 +1,20 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SyncDataProvider } from "@/components/sync-data-provider";
 
 const browserQueryClient = new QueryClient();
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({
+  children,
+  userId,
+}: {
+  children: React.ReactNode;
+  userId?: string;
+}) {
   return (
     <QueryClientProvider client={browserQueryClient}>
-      {children}
+      <SyncDataProvider userId={userId}>{children}</SyncDataProvider>
     </QueryClientProvider>
   );
 }

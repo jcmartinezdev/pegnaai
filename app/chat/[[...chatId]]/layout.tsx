@@ -1,5 +1,5 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ChatRouterProvider } from "@/lib/chatRouter";
+import { ChatRouterProvider } from "@/lib/chat/chatRouter";
 import ChatSidebar from "./sidebar";
 import { auth0 } from "@/lib/auth0";
 
