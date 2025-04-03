@@ -7,6 +7,7 @@ import {
 import { stripe } from "@/lib/billing/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import * as Sentry from "@sentry/nextjs";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error("Error handling webhook event:", error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { error: "Error handling webhook event" },
       { status: 500 },
