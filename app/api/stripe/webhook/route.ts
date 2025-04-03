@@ -7,6 +7,7 @@ import {
 import { stripe } from "@/lib/billing/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import * as Sentry from "@sentry/nextjs";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -30,71 +31,80 @@ export async function POST(req: NextRequest) {
 
   console.log("Webhook event received:", event.type);
 
-  switch (event.type) {
-    case "checkout.session.completed":
-      // Payment is successful
-      const checkoutSession = event.data.object as Stripe.Checkout.Session;
-      const checkoutUserId = checkoutSession.client_reference_id!;
-      const checkoutCustomerId =
-        typeof checkoutSession.customer === "string"
-          ? checkoutSession.customer
-          : checkoutSession.customer!.id;
-      const checkoutSubscriptionId =
-        typeof checkoutSession.subscription === "string"
-          ? checkoutSession.subscription
-          : checkoutSession.subscription!.id;
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+        // Payment is successful
+        const checkoutSession = event.data.object as Stripe.Checkout.Session;
+        const checkoutUserId = checkoutSession.client_reference_id!;
+        const checkoutCustomerId =
+          typeof checkoutSession.customer === "string"
+            ? checkoutSession.customer
+            : checkoutSession.customer!.id;
+        const checkoutSubscriptionId =
+          typeof checkoutSession.subscription === "string"
+            ? checkoutSession.subscription
+            : checkoutSession.subscription!.id;
 
-      console.log("Checkout session completed:", {
-        checkoutUserId,
-        checkoutCustomerId,
-        checkoutSubscriptionId,
-      });
-
-      const user = await getUser(checkoutUserId);
-      if (!user) {
-        // Create the user if it doesn't exist
-        createUser({
-          id: checkoutUserId,
-          stripeCustomerId: checkoutCustomerId,
-          stripeSubscriptionId: checkoutSubscriptionId,
+        console.log("Checkout session completed:", {
+          checkoutUserId,
+          checkoutCustomerId,
+          checkoutSubscriptionId,
         });
-      } else {
-        updateUser(checkoutUserId, {
-          stripeCustomerId: checkoutCustomerId,
-          stripeSubscriptionId: checkoutSubscriptionId,
+
+        const user = await getUser(checkoutUserId);
+        if (!user) {
+          // Create the user if it doesn't exist
+          await createUser({
+            id: checkoutUserId,
+            stripeCustomerId: checkoutCustomerId,
+            stripeSubscriptionId: checkoutSubscriptionId,
+          });
+        } else {
+          await updateUser(checkoutUserId, {
+            stripeCustomerId: checkoutCustomerId,
+            stripeSubscriptionId: checkoutSubscriptionId,
+          });
+        }
+
+        break;
+
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+        // Handle subscription status changes
+        const subscription = event.data.object as Stripe.Subscription;
+        const subscriptionCustomerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer!.id;
+        const subscriptionStatus = subscription.status;
+
+        const userFromDb = await getUserByStripeCustomerId(
+          subscriptionCustomerId,
+        );
+
+        console.log("Subscription updated/deleted:", {
+          userFromDb: userFromDb?.id,
+          stripeCustomerId: subscriptionCustomerId,
+          stripeSubscriptionId: subscription.id,
+          subscriptionStatus: subscriptionStatus,
         });
-      }
 
-      break;
-
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-      // Handle subscription status changes
-      const subscription = event.data.object as Stripe.Subscription;
-      const subscriptionCustomerId =
-        typeof subscription.customer === "string"
-          ? subscription.customer
-          : subscription.customer!.id;
-      const subscriptionStatus = subscription.status;
-
-      const userFromDb = await getUserByStripeCustomerId(
-        subscriptionCustomerId,
-      );
-
-      console.log("Subscription updated/deleted:", {
-        userFromDb: userFromDb?.id,
-        stripeCustomerId: subscriptionCustomerId,
-        stripeSubscriptionId: subscription.id,
-        subscriptionStatus: subscriptionStatus,
-      });
-
-      updateUser(userFromDb.id, {
-        planName: subscriptionStatus === "active" ? "pro" : "free",
-        stripeCustomerId: subscriptionCustomerId,
-        stripeSubscriptionId: subscription.id,
-        subscriptionStatus: subscriptionStatus,
-      });
-      break;
+        await updateUser(userFromDb.id, {
+          planName: subscriptionStatus === "active" ? "pro" : "free",
+          stripeCustomerId: subscriptionCustomerId,
+          stripeSubscriptionId: subscription.id,
+          subscriptionStatus: subscriptionStatus,
+        });
+        break;
+    }
+  } catch (error) {
+    console.error("Error handling webhook event:", error);
+    Sentry.captureException(error);
+    return NextResponse.json(
+      { error: "Error handling webhook event" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ received: true });
