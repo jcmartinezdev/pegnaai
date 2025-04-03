@@ -4,12 +4,12 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { useChatRouter } from "@/lib/chatRouter";
+import { useChatRouter } from "@/lib/chat/chatRouter";
 import { chatDB } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Plus } from "lucide-react";
 import ChatForm from "./chat-form";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import processPegnaAIStream from "@/lib/chat/ask-chat";
 import { AskModel } from "@/lib/chat/types";
 import ChatLimitBanner from "./chat-limit-banner";
@@ -17,6 +17,7 @@ import ChatScrollContainer from "./chat-scroll-container";
 import ChatSuggestions from "./chat-suggestions";
 import { cn } from "@/lib/utils";
 import ChatContent from "./chat-content";
+import { SyncDataContext } from "@/components/sync-data-provider";
 
 type ChatContainerProps = {
   userPlan?: string;
@@ -31,6 +32,7 @@ export default function ChatContainer({
   const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
+  const syncEngine = useContext(SyncDataContext);
 
   // When the user selects a new chat, let's clear the remaining limits
   useEffect(() => {
@@ -39,6 +41,9 @@ export default function ChatContainer({
 
   async function onProcessPegnaAIStream(ask: AskModel) {
     const response = await processPegnaAIStream(ask);
+    // Sync after sending a message
+    syncEngine?.start();
+    // Set the remaining limits
     setRemainingLimits(response.remainingMessages);
   }
 
@@ -53,7 +58,7 @@ export default function ChatContainer({
   }, [threadId]);
 
   const messages = useLiveQuery(() => {
-    return chatDB.getAllMessages(threadId);
+    return chatDB.getAllMessagesForThread(threadId);
   }, [threadId]);
 
   function onSuggestionClick(suggestion: string) {

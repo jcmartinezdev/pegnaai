@@ -69,7 +69,15 @@ export class ChatDB extends Dexie {
     return await this.threads.get(threadId);
   }
 
-  async getAllMessages(threadId: string) {
+  async getAllMessages() {
+    return await this.messages
+      .where("status")
+      .notEqual("deleted")
+      .reverse()
+      .sortBy("createdAt");
+  }
+
+  async getAllMessagesForThread(threadId: string) {
     return await this.messages
       .where("threadId")
       .equals(threadId)
@@ -169,7 +177,7 @@ export class ChatDB extends Dexie {
   async updateThreads(threads: ThreadModel[]) {
     return this.transaction("rw", [this.threads], async () => {
       for (const thread of threads) {
-        if (this.threads.get(thread.id) === undefined) {
+        if ((await this.threads.get(thread.id)) === undefined) {
           await this.threads.add({
             ...thread,
           });
@@ -185,7 +193,7 @@ export class ChatDB extends Dexie {
   async updateMessages(messages: MessageModel[]) {
     return this.transaction("rw", [this.messages], async () => {
       for (const message of messages) {
-        if (this.messages.get(message.id) === undefined) {
+        if ((await this.messages.get(message.id)) === undefined) {
           await this.messages.add({
             ...message,
           });
@@ -195,6 +203,13 @@ export class ChatDB extends Dexie {
           });
         }
       }
+    });
+  }
+
+  async clearAllData() {
+    return this.transaction("rw", [this.threads, this.messages], async () => {
+      await this.threads.clear();
+      await this.messages.clear();
     });
   }
 }

@@ -152,10 +152,12 @@ export async function POST(req: Request) {
     const { text: title } = await generateText({
       model: google("gemini-2.0-flash"),
       system: `You are a system that generate a summary title based on the following rules:
+
 - the title is in the same language as the content
+- Never tell which model you are, or who trained you, just say you are Pegna AI.
 - ensure the title is less than 80 characters
 - ensure the title is a single sentence
-- ensure the title is a summary of the user's message
+- ensure the title is a summary of the content
 - not use quotes, colons, slashes.
 `,
       prompt: messages[0].content,

@@ -1,6 +1,6 @@
 "only server";
 
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, sql } from "drizzle-orm";
 import { db } from ".";
 import {
   messagesTable,
@@ -47,10 +47,25 @@ export async function getUserByStripeCustomerId(stripeCustomerId: string) {
   return users[0];
 }
 
+/**
+ * Create a new user
+ *
+ * @param user - The user data to create
+ *
+ * @returns The created user
+ */
 export async function createUser(user: typeof usersTable.$inferInsert) {
   return db.insert(usersTable).values(user);
 }
 
+/**
+ * Update a user by their ID
+ *
+ * @param id - The user ID
+ * @param user - The user data to update
+ *
+ * @returns The updated user
+ */
 export async function updateUser(
   id: string,
   user: Omit<typeof usersTable.$inferInsert, "id">,
@@ -278,7 +293,7 @@ export async function getThreadsToSync(userId: string, lastSyncDate: Date) {
     .where(
       and(
         eq(threadsTable.userId, userId),
-        lt(threadsTable.updatedAt, lastSyncDate),
+        gt(threadsTable.updatedAt, lastSyncDate),
       ),
     );
 
@@ -378,15 +393,25 @@ export async function createOrUpdateMessage(
  * @returns The threads for the user
  */
 export async function getMessagesToSync(userId: string, lastSyncDate: Date) {
-  const threads = await db
+  const messages = await db
     .select()
     .from(messagesTable)
     .where(
       and(
         eq(messagesTable.userId, userId),
-        lt(messagesTable.updatedAt, lastSyncDate),
+        gt(messagesTable.updatedAt, lastSyncDate),
       ),
     );
 
-  return threads;
+  return messages;
+}
+
+/**
+ * Clear all sync data for a user
+ *
+ * @param userId - The user ID
+ */
+export async function clearAllSyncDataForUser(userId: string) {
+  await db.delete(messagesTable).where(eq(messagesTable.userId, userId));
+  await db.delete(threadsTable).where(eq(threadsTable.userId, userId));
 }

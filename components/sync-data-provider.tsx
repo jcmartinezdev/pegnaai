@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createContext, ReactNode, useCallback, useEffect } from "react";
 
 type SyncDataContextType = {
-  start: () => void;
+  start: (forceToSyncAllData?: boolean) => void;
   isSyncing: boolean;
 };
 
@@ -21,17 +21,29 @@ export function SyncDataProvider({
 }) {
   const syncDataMutation = useMutation({
     mutationKey: ["syncData"],
-    mutationFn: localSyncData,
+    mutationFn: ({
+      userId,
+      forceToSyncAllData,
+    }: {
+      userId: string;
+      forceToSyncAllData?: boolean;
+    }) => localSyncData(userId, forceToSyncAllData),
     scope: {
       id: "syncData",
     },
   });
 
-  const startSync = useCallback(() => {
-    if (!syncDataMutation.isPending) {
-      syncDataMutation.mutate(userId);
-    }
-  }, [syncDataMutation.isPending, syncDataMutation.mutate, userId]);
+  const { mutate: mutateSync } = syncDataMutation;
+
+  const startSync = useCallback(
+    (forceToSyncAllData?: boolean) => {
+      if (!userId) {
+        return;
+      }
+      mutateSync({ userId, forceToSyncAllData });
+    },
+    [mutateSync, userId],
+  );
 
   // Sync every 5 minutes
   useEffect(() => {
@@ -42,7 +54,7 @@ export function SyncDataProvider({
       5 * 60 * 1000,
     );
 
-    // startSync();
+    startSync();
 
     return () => clearInterval(interval);
   }, [userId, startSync]);

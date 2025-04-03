@@ -19,6 +19,8 @@ export const usersTable = pgTable("users", {
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   subscriptionStatus: varchar("subscription_status", { length: 25 }),
+
+  enableSync: boolean("enable_sync").default(true).notNull(),
 });
 
 export const userAIExperienceTable = pgTable("user_ai_experience", {

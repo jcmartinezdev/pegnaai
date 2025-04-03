@@ -1,7 +1,7 @@
 import { createSampleLocalThreads } from "@/test-utils/factories/local-threads";
 import { chatDB } from "../localDb";
 import { localSyncData } from "./local-sync";
-import { syncData } from "./actions";
+import { shouldSyncData, syncData } from "./actions";
 import { createSampleThreads } from "@/test-utils/factories/threads";
 import { createSampleMessages } from "@/test-utils/factories/messages";
 
@@ -14,6 +14,7 @@ describe("Local Sync", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    jest.mocked(shouldSyncData).mockResolvedValue(true);
     jest.mocked(syncData).mockReturnValue(
       new Promise((resolve) =>
         resolve({
@@ -31,6 +32,12 @@ describe("Local Sync", () => {
 
   it("should not call sync data if userId is not provided", async () => {
     await localSyncData();
+    expect(syncData).not.toHaveBeenCalled();
+  });
+
+  it("should not sync data if the user doesn't want to", async () => {
+    jest.mocked(shouldSyncData).mockResolvedValue(false);
+    await localSyncData("test-user-id");
     expect(syncData).not.toHaveBeenCalled();
   });
 

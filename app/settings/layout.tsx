@@ -6,7 +6,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import UserUsageSummary from "./user-usage-summary";
 import SettingsMenu from "./settings-menu";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, LogOut } from "lucide-react";
+import { logOut } from "@/lib/auth/utils";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -33,7 +34,13 @@ export default async function SettingsLayout({
           </Link>
         </Button>
         <div className="flex-grow"></div>
-        <ThemeSwitcher />
+        <div className="flex space-x-2">
+          <ThemeSwitcher />
+          <Button variant="destructive" size="sm" onClick={logOut}>
+            <LogOut />
+            Log out
+          </Button>
+        </div>
       </div>
 
       <UserUsageSummary />

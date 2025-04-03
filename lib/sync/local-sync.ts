@@ -1,3 +1,5 @@
+"use client";
+
 import { chatDB } from "../localDb";
 import {
   LlmModel,
@@ -5,17 +7,31 @@ import {
   SearchMetadata,
   ToolResponse,
 } from "../chat/types";
-import { syncData } from "./actions";
+import { shouldSyncData, syncData } from "./actions";
 
 export const LAST_SYNC_DATE_STORAGE_KEY = "lastSyncDate";
 
-export async function localSyncData(userId?: string) {
+export async function localSyncData(
+  userId?: string,
+  forceToSyncAllData?: boolean,
+) {
   if (!userId) {
     return;
   }
+
+  // Check if the user wants to sync data
+  const shouldSync = await shouldSyncData();
+  if (!shouldSync) {
+    return;
+  }
+
   console.log("[SYNC] Sync started ...");
-  const threads = await chatDB.getThreadsToSync();
-  const messages = await chatDB.getMessagesToSync();
+  const threads = await (forceToSyncAllData
+    ? chatDB.getAllThreads()
+    : chatDB.getThreadsToSync());
+  const messages = await (forceToSyncAllData
+    ? chatDB.getAllMessages()
+    : chatDB.getMessagesToSync());
 
   const toServerThreads = threads.map((thread) => ({
     ...thread,
@@ -35,11 +51,11 @@ export async function localSyncData(userId?: string) {
 
   const lastSyncDate = new Date(
     localStorage.getItem(LAST_SYNC_DATE_STORAGE_KEY) ||
-      new Date().toISOString(),
+      new Date("2000-01-01").toISOString(),
   );
 
   // Sync data with the server
-  console.log("[SYNC] Syncing data with the server...", {
+  console.log("[SYNC] Syncing data with the server, sending...", {
     messages: messages.length,
     threads: threads.length,
   });
@@ -60,6 +76,11 @@ export async function localSyncData(userId?: string) {
     console.error("[SYNC] No data received from the server");
     throw new Error("No data received from the server");
   }
+
+  console.log("[SYNC] Data received from the server", {
+    threads: response.data.threads.length,
+    messages: response.data.messages.length,
+  });
 
   // Update the local database with items as synced
   await chatDB.updateThreads(
@@ -107,7 +128,7 @@ export async function localSyncData(userId?: string) {
   // Update the last sync date
   localStorage.setItem(LAST_SYNC_DATE_STORAGE_KEY, new Date().toISOString());
 
-  console.log("[SYNC] Data synced successfully", response);
+  console.log("[SYNC] Data synced successfully!");
 
   return response.data;
 }

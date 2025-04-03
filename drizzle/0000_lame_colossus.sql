@@ -54,5 +54,6 @@ CREATE TABLE "users" (
 	"plan_name" "tier" DEFAULT 'free' NOT NULL,
 	"stripe_customer_id" varchar,
 	"stripe_subscription_id" varchar,
-	"subscription_status" varchar(25)
+	"subscription_status" varchar(25),
+	"enable_sync" boolean DEFAULT true NOT NULL
 );

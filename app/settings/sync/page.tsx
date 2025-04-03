@@ -6,13 +6,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Download, Trash2, Cloud, AlertTriangle } from "lucide-react";
+import { Trash2, Cloud, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SyncButton from "./sync-button";
+import { auth0 } from "@/lib/auth0";
+import { getUser } from "@/db/queries";
+import SyncSwitch from "./sync-switch";
+import ExportConversationsButton from "./export-conversations-button";
 
-export default function SyncPage() {
+export default async function SyncPage() {
+  const session = await auth0.getSession();
+  const user = await getUser(session!.user.sub);
+  const enableCloudSync = user ? user.enableSync : true; // Default to true
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,16 +49,13 @@ export default function SyncPage() {
                 Sync your conversations across devices
               </p>
             </div>
-            <Switch defaultChecked />
+            <SyncSwitch defaultChecked={enableCloudSync} />
           </div>
           <div className="space-y-4">
             <h3 className="text-base font-medium">Data Management</h3>
             <div className="flex flex-wrap gap-4">
-              <SyncButton />
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export Conversations
-              </Button>
+              {enableCloudSync && <SyncButton />}
+              <ExportConversationsButton />
             </div>
           </div>
         </CardContent>

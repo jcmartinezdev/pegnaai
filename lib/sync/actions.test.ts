@@ -18,6 +18,9 @@ jest.mock("@/db/queries");
 describe("syncData", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    jest.mocked(getThreadsToSync).mockResolvedValue([]);
+    jest.mocked(getMessagesToSync).mockResolvedValue([]);
   });
 
   it("should return an error if the user is not authenticated", async () => {
@@ -72,10 +75,12 @@ describe("syncData", () => {
     it("should not update any threads if there are no changes", async () => {
       const result = await syncData([], [], new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: 0,
-        updatedMessages: 0,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: 0,
+          updatedMessages: 0,
+        }),
+      );
       expect(createOrUpdateThread).toHaveBeenCalledTimes(0);
     });
 
@@ -87,10 +92,12 @@ describe("syncData", () => {
 
       const result = await syncData(threads, [], new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: newThreadsCount,
-        updatedMessages: 0,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: newThreadsCount,
+          updatedMessages: 0,
+        }),
+      );
       expect(createOrUpdateThread).toHaveBeenCalledTimes(newThreadsCount);
       for (let i = 0; i < newThreadsCount; i++) {
         expect(createOrUpdateThread).toHaveBeenCalledWith(threads[i]);
@@ -113,10 +120,12 @@ describe("syncData", () => {
 
       const result = await syncData(threads, [], new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: totalThreadsCount,
-        updatedMessages: 0,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: totalThreadsCount,
+          updatedMessages: 0,
+        }),
+      );
       expect(createOrUpdateThread).toHaveBeenCalledTimes(totalThreadsCount);
       for (let i = 0; i < totalThreadsCount; i++) {
         expect(createOrUpdateThread).toHaveBeenCalledWith(threads[i]);
@@ -142,10 +151,12 @@ describe("syncData", () => {
 
       const result = await syncData(threads, [], new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: updatedThreadsCount,
-        updatedMessages: 0,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: updatedThreadsCount,
+          updatedMessages: 0,
+        }),
+      );
       expect(createOrUpdateThread).toHaveBeenCalledTimes(updatedThreadsCount);
       for (let i = existingThreadsCount; i < totalThreadsCount; i++) {
         expect(createOrUpdateThread).toHaveBeenCalledWith(threads[i]);
@@ -167,10 +178,12 @@ describe("syncData", () => {
     it("should not update any messages if there are no changes", async () => {
       const result = await syncData([], [], new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: 0,
-        updatedMessages: 0,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: 0,
+          updatedMessages: 0,
+        }),
+      );
       expect(createOrUpdateMessage).toHaveBeenCalledTimes(0);
     });
 
@@ -181,10 +194,12 @@ describe("syncData", () => {
 
       const result = await syncData([], messages, new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: 0,
-        updatedMessages: newMessagesCount,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: 0,
+          updatedMessages: newMessagesCount,
+        }),
+      );
       expect(createOrUpdateMessage).toHaveBeenCalledTimes(newMessagesCount);
       for (let i = 0; i < newMessagesCount; i++) {
         expect(createOrUpdateMessage).toHaveBeenCalledWith(messages[i]);
@@ -206,10 +221,12 @@ describe("syncData", () => {
 
       const result = await syncData([], messages, new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: 0,
-        updatedMessages: totalMessagesCount,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: 0,
+          updatedMessages: totalMessagesCount,
+        }),
+      );
       expect(createOrUpdateMessage).toHaveBeenCalledTimes(totalMessagesCount);
       for (let i = 0; i < totalMessagesCount; i++) {
         expect(createOrUpdateMessage).toHaveBeenCalledWith(messages[i]);
@@ -235,10 +252,12 @@ describe("syncData", () => {
 
       const result = await syncData([], messages, new Date());
       expect(result.success).toEqual(true);
-      expect(result.data).toEqual({
-        updatedThreads: 0,
-        updatedMessages: updatedMessagesCount,
-      });
+      expect(result.data).toEqual(
+        expect.objectContaining({
+          updatedThreads: 0,
+          updatedMessages: updatedMessagesCount,
+        }),
+      );
       expect(createOrUpdateMessage).toHaveBeenCalledTimes(updatedMessagesCount);
       for (let i = existingMessagesCount; i < totalMessagesCount; i++) {
         expect(createOrUpdateMessage).toHaveBeenCalledWith(messages[i]);

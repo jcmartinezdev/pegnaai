@@ -18,7 +18,7 @@ const createDefaultLocalMessage = (): MessageModel => {
     createdAt: new Date(),
     updatedAt: new Date(),
     status: "done",
-    synced: false,
+    synced: 0,
   };
 };
 

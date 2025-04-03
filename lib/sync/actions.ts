@@ -7,10 +7,11 @@ import {
   getMessagesToSync,
   getThreadsForUser,
   getThreadsToSync,
+  getUser,
 } from "@/db/queries";
 import { messagesTable, threadsTable } from "@/db/schema";
-import { ActionResponse } from "../billing/types";
 import { auth0 } from "../auth0";
+import { ActionResponse } from "../types";
 
 type SyncDataResponse = {
   updatedThreads: number;
@@ -19,6 +20,31 @@ type SyncDataResponse = {
   messages: (typeof messagesTable.$inferSelect)[];
 };
 
+/**
+ * Check if the user wants to sync data
+ *
+ * @returns true if the user wants to sync data, false otherwise
+ */
+export async function shouldSyncData() {
+  const session = await auth0.getSession();
+  if (!session) {
+    return false;
+  }
+
+  const userId = session.user.sub;
+
+  // If the user never specified his prefernce, it syncs by default
+  const user = await getUser(userId);
+  if (!user) {
+    return true;
+  }
+
+  return user.enableSync;
+}
+
+/**
+ * Sync data with the server
+ */
 export async function syncData(
   threads: (typeof threadsTable.$inferSelect)[],
   messages: (typeof messagesTable.$inferSelect)[],
@@ -115,8 +141,13 @@ export async function syncData(
     data: {
       updatedThreads,
       updatedMessages,
-      threads: localState[0],
-      messages: localState[1],
+      // We need to filter the threads and messages to not include those I just received
+      threads: localState[0].filter(
+        (nt) => !threads.some((t) => t.localId === nt.localId),
+      ),
+      messages: localState[1].filter(
+        (nm) => !messages.some((m) => m.localId === nm.localId),
+      ),
     },
   };
 }

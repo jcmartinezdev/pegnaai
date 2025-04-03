@@ -6,8 +6,8 @@ import { stripe } from "@/lib/billing/stripe";
 import { db } from "@/db";
 import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { ActionResponse } from "./types";
 import { getUser } from "@/db/queries";
+import { ActionResponse } from "../types";
 
 /**
  * Starts the checkout flow for a subscription
