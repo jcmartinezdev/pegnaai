@@ -173,7 +173,7 @@ export default function ChatForm({
                   className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
                 >
                   <Globe />
-                  Search
+                  <span className="hidden sm:inline">Search</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="rounded-lg overflow-hidden border-2">
@@ -205,7 +205,7 @@ export default function ChatForm({
                           onClick={() => field.onChange(!field.value)}
                         >
                           <Globe />
-                          Search
+                          <span className="hidden sm:inline">Search</span>
                         </Button>
                       )}
                     />
@@ -228,7 +228,7 @@ export default function ChatForm({
                   className="hover:bg-blue-600/10 hover:text-blue-600 bg-transparent text-accent-foreground"
                 >
                   <Brain />
-                  Think Hard
+                  <span className="hidden sm:inline">Think Hard</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="rounded-lg overflow-hidden border-2">
@@ -264,7 +264,7 @@ export default function ChatForm({
                           }
                         >
                           <Brain />
-                          Think Hard
+                          <span className="hidden sm:inline">Think Hard</span>
                         </Button>
                       )}
                     />
