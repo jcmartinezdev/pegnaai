@@ -37,7 +37,7 @@ export function ModelPicker({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 min-w-40 justify-between"
+          className="flex items-center gap-2 min-w-32 sm:min-w-40 justify-between"
         >
           <div className="flex items-center gap-2">
             <ModelIcon model={selectedModel} className="h-5 w-5" />

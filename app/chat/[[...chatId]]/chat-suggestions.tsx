@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -7,16 +5,16 @@ import { Book, Code2, Compass, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 const tabs = [
-  { id: "discover", label: "Discover", icon: Compass },
+  { id: "explore", label: "Explore", icon: Compass },
   { id: "creative", label: "Create", icon: Sparkles },
   { id: "learning", label: "Learn", icon: Book },
   { id: "coding", label: "Code", icon: Code2 },
 ];
 
 const suggestions: Record<string, string[]> = {
-  discover: [
+  explore: [
     "How does AI work?",
-    "What can you help me with?",
+    "Generate an image of a dog in space",
     "Tell me a fun fact about space",
     "Who are you?",
   ],
@@ -50,7 +48,7 @@ type ChatSuggestionsProps = {
 export default function ChatSuggestions({
   onSuggestionClick,
 }: ChatSuggestionsProps) {
-  const [activeTab, setActiveTab] = useState("discover");
+  const [activeTab, setActiveTab] = useState("explore");
 
   return (
     <div className="mt-16 w-full max-w-2xl mx-auto text-left overflow-hidden">

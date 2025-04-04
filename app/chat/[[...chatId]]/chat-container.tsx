@@ -82,7 +82,7 @@ export default function ChatContainer({
               <Separator orientation="vertical" className="mr-2 h-4" />
             </>
           )}
-          {thread?.title || "New Chat"}
+          <div className="truncate">{thread?.title || "New Chat"}</div>
           <div className="flex-grow"></div>
           <ThemeSwitcher />
         </div>
