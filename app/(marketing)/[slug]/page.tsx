@@ -26,9 +26,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",
@@ -43,7 +43,7 @@ export async function generateMetadata({
       title: data.title || slug,
       description: data.description || "",
     };
-  } catch (error) {
+  } catch {
     return {
       title: slug,
       description: "",
@@ -51,12 +51,12 @@ export async function generateMetadata({
   }
 }
 
-export default function MarketingPage({
+export default async function MarketingPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const { slug } = params;
+  const { slug } = await params;
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",
