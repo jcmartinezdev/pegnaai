@@ -48,3 +48,23 @@ export default async function saveSyncSettings({
     data: "Sync settings saved successfully",
   };
 }
+
+export async function deleteAllServerData(): Promise<ActionResponse<string>> {
+  const session = await auth0.getSession();
+  if (!session) {
+    return {
+      success: false,
+      error: "User not authenticated",
+    };
+  }
+
+  const userId = session.user.sub;
+
+  // Delete all existing threads and messages from the server
+  await clearAllSyncDataForUser(userId);
+
+  return {
+    success: true,
+    data: "All user data deleted successfully",
+  };
+}

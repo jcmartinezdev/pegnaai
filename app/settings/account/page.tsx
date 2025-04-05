@@ -14,6 +14,7 @@ import { getProLimits, getUser } from "@/db/queries";
 import { auth0 } from "@/lib/auth0";
 import { getPlanName, isFreePlan } from "@/lib/billing/account";
 import CheckoutButton from "./checkout-button";
+import Link from "next/link";
 
 export default async function SubscriptionPage() {
   const session = await auth0.getSession();
@@ -167,9 +168,12 @@ export default async function SubscriptionPage() {
               <Button
                 variant="destructive"
                 className="mt-4 md:mt-0 w-full md:w-auto"
+                asChild
               >
-                <Trash2 />
-                Delete Account
+                <Link href="mailto:support@pegna.ai?subject=Delete%20Account">
+                  <Trash2 />
+                  Delete Account
+                </Link>
               </Button>
             </div>
           </div>

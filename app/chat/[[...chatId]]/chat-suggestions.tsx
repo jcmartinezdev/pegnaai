@@ -53,10 +53,10 @@ export default function ChatSuggestions({
   return (
     <div className="mt-16 w-full max-w-2xl mx-auto text-left overflow-hidden">
       <div className="mb-8">
-        <h1 className="text-2xl md:text-4xl font-semibold text-slate-800">
+        <h1 className="text-2xl md:text-4xl font-semibold text-slate-800 dark:text-slate-200">
           How can I help you today?
         </h1>
-        <p className="text-slate-500 mt-1">
+        <p className="text-slate-500 dark:text-slate-300 mt-1">
           Select a suggestion or type your own question
         </p>
       </div>

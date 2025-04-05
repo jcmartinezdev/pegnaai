@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useChatRouter } from "@/lib/chat/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
@@ -15,6 +14,7 @@ import { isFreePlan } from "@/lib/billing/account";
 import { Popover } from "@/components/ui/popover";
 import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import UnlockAllBanner from "./unlock-all-banner";
+import { TextareaAutosize } from "@/components/ui/textarea";
 
 type Props = {
   threadId: string;
@@ -128,8 +128,10 @@ export default function ChatForm({
       onSubmit={handleSubmit(onSubmit)}
     >
       <div className="flex items-start">
-        <Textarea
-          className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0 min-h-10"
+        <TextareaAutosize
+          className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0"
+          minRows={1}
+          maxRows={12}
           placeholder="Ask me anything..."
           onKeyDown={(e) => {
             if (

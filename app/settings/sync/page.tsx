@@ -5,15 +5,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Trash2, Cloud, AlertTriangle } from "lucide-react";
+import { Cloud, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import SyncButton from "./sync-button";
 import { auth0 } from "@/lib/auth0";
 import { getUser } from "@/db/queries";
 import SyncSwitch from "./sync-switch";
 import ExportConversationsButton from "./export-conversations-button";
+import DeleteAllDataButton from "./delete-all-data-button";
 
 export default async function SyncPage() {
   const session = await auth0.getSession();
@@ -91,13 +91,7 @@ export default async function SyncPage() {
                   delete your account, nor your subscription and settings.
                 </p>
               </div>
-              <Button
-                variant="destructive"
-                className="w-full md:w-auto mt-4 md:mt-0"
-              >
-                <Trash2 />
-                Delete All User Data
-              </Button>
+              <DeleteAllDataButton />
             </div>
           </div>
         </CardContent>

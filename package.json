@@ -55,6 +55,7 @@
     "react-hook-form": "^7.55.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
+    "react-textarea-autosize": "^8.5.9",
     "sonner": "^2.0.2",
     "stripe": "^17.7.0",
     "tailwind-merge": "^3.0.2",
