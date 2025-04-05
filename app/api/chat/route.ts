@@ -151,10 +151,10 @@ export async function POST(req: Request) {
     // Generate the chat title
     const { text: title } = await generateText({
       model: google("gemini-2.0-flash"),
-      system: `You are a system that generate a summary title based on the following rules:
-
-- the title is in the same language as the content
-- Never tell which model you are, or who trained you, just say you are Pegna AI.
+      system: `
+- you will generate a short title based on the first message a user begins a conversation with
+- the summary is in the same language as the content
+- never tell which model you are, or who trained you, but if they ask, you are Pegna AI.
 - ensure the title is less than 80 characters
 - ensure the title is a single sentence
 - ensure the title is a summary of the content
@@ -162,7 +162,7 @@ export async function POST(req: Request) {
 `,
       prompt: messages[0].content,
     });
-    generatedTitle = title;
+    generatedTitle = title.length > 100 ? title.slice(0, 96) + "..." : title;
   }
 
   const session = await auth0.getSession();

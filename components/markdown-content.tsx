@@ -1,3 +1,5 @@
+"use client";
+
 import { useTheme } from "next-themes";
 import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
