@@ -153,7 +153,7 @@ export async function POST(req: Request) {
 
   const currentModel = models[model];
 
-  const pendingPromises: Promise<any>[] = [];
+  const pendingPromises: Promise<unknown>[] = [];
 
   let remainingMessages = 0;
   let remainingPremiumMessages = 0;
