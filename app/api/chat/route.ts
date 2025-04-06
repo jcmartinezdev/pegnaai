@@ -70,13 +70,11 @@ const getModelSettings = (
 ): ModelSelectorItem => {
   const settings = modelSettings[model];
 
-  const params = modelParams?.includeSearch
-    ? "search"
-    : "" + modelParams?.reasoningEffort
-      ? "reasoning"
-      : "";
+  const params =
+    (modelParams?.includeSearch ? "search" : "") +
+    (modelParams?.reasoningEffort ? "reasoning" : "");
 
-  return settings[params] || settings || modelSettings["chat"].default;
+  return settings[params] || settings.default || modelSettings["chat"].default;
 };
 
 function getModel(selectedModel: LlmModel, modelParams?: ModelParams) {
@@ -146,30 +144,16 @@ export async function POST(req: Request) {
   }
   const { model, modelParams, messages, generateTitle } = data;
 
-  let generatedTitle: string | undefined = undefined;
-  if (generateTitle) {
-    // Generate the chat title
-    const { text: title } = await generateText({
-      model: google("gemini-2.0-flash"),
-      system: `
-- you will generate a short title based on the first message a user begins a conversation with
-- the summary is in the same language as the content
-- never tell which model you are, or who trained you, but if they ask, you are Pegna AI.
-- ensure the title is less than 80 characters
-- ensure the title is a single sentence
-- ensure the title is a summary of the content
-- not use quotes, colons, slashes.
-`,
-      prompt: messages[0].content,
-    });
-    generatedTitle = title.length > 100 ? title.slice(0, 96) + "..." : title;
-  }
-
   const session = await auth0.getSession();
-  const user = await getUser(session?.user.sub || "unknown");
+  const [user, limits, usage] = await Promise.all([
+    getUser(session?.user.sub || "unknown"),
+    getUserLimits(session?.user.sub),
+    getCurrentUserUsageForUser(session?.user.sub || "unknown"),
+  ]);
+
   const currentModel = models[model];
 
-  const limits = await getUserLimits(session?.user.sub);
+  const pendingPromises: Promise<unknown>[] = [];
 
   let remainingMessages = 0;
   let remainingPremiumMessages = 0;
@@ -204,7 +188,6 @@ export async function POST(req: Request) {
   // Validate rate limits
   if (session) {
     // Check for rate limits
-    const usage = await getCurrentUserUsageForUser(session.user.sub);
     if (currentModel.isPremium) {
       if (usage.premiumMessagesCount >= limits.premiumMessagesLimit) {
         return new Response(
@@ -227,7 +210,9 @@ export async function POST(req: Request) {
       }
     }
 
-    await incrementUserUsageForUser(session.user.sub, currentModel.isPremium);
+    pendingPromises.push(
+      incrementUserUsageForUser(session.user.sub, currentModel.isPremium),
+    );
 
     remainingMessages =
       limits.messagesLimit -
@@ -260,6 +245,7 @@ export async function POST(req: Request) {
     cookieStore.set(RATE_LIMIT_COOKIE, String(remainingMessages));
   }
 
+  //FIXME: can I cache this?
   const systemPrompt = await buildSystemPrompt(
     session?.user.sub,
     session?.user.name,
@@ -268,8 +254,29 @@ export async function POST(req: Request) {
 
   return createDataStreamResponse({
     execute: (dataStream) => {
-      if (generatedTitle) {
-        dataStream.writeData({ type: "thread-metadata", generatedTitle });
+      let generatedTitle: string | undefined = undefined;
+      if (generateTitle) {
+        // Generate the chat title
+        pendingPromises.push(
+          generateText({
+            model: google("gemini-2.0-flash"),
+            system: `
+- you will generate a short title based on the first message a user begins a conversation with
+- the summary is in the same language as the content
+- never tell which model you are, or who trained you, but if they ask, you are Pegna AI.
+- ensure the title is less than 80 characters
+- ensure the title is a single sentence
+- ensure the title is a summary of the content
+- not use quotes, colons, slashes.
+`,
+            prompt: messages[0].content,
+          }).then((res) => {
+            const title = res.text;
+            generatedTitle =
+              title.length > 100 ? title.slice(0, 96) + "..." : title;
+            dataStream.writeData({ type: "thread-metadata", generatedTitle });
+          }),
+        );
       }
 
       if (remainingPremiumMessages < 10 || remainingMessages < 10) {
@@ -328,7 +335,8 @@ export async function POST(req: Request) {
         system: systemPrompt,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         tools,
-        onFinish: ({ providerMetadata }) => {
+        onFinish: async ({ providerMetadata }) => {
+          await Promise.all(pendingPromises);
           // Process provider metadata
           const googleMetadata = providerMetadata?.google as
             | GoogleGenerativeAIProviderMetadata
