@@ -39,7 +39,5 @@ ${!isFreePlan(userPlan) ? "- You are a free user, and you have limited access to
 ${!isFreePlan(userPlan) ? "- Users on the free plan can't generate or create images." : ""}
 ${aiExperience?.traits && aiExperience.traits.length > 0 ? "- You have the following traits: " + aiExperience.traits.join(", ") + "." : ""}`;
 
-  console.log("System prompt:", systemPromp);
-
   return systemPromp;
 }
