@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {
   Card,
   CardContent,
@@ -9,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { LifeBuoy, Mail, HelpCircle, LucideIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import FeedbackButtons from "./feedback-buttons";
+import { auth0 } from "@/lib/auth0";
+import { getUser } from "@/db/queries";
 
 const SupportLinkBox = (props: {
   title: string;
@@ -28,7 +32,15 @@ const SupportLinkBox = (props: {
   </Link>
 );
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  const session = await auth0.getSession();
+  const user = await getUser(session!.user.sub);
+  const planName = user?.planName || "free";
+  const userHash = crypto
+    .createHmac("sha256", process.env.FEATUREBASE_SIGN_SECRET!)
+    .update(session!.user.sub.replace(/\|/g, "."))
+    .digest("hex");
+
   return (
     <div className="space-y-6">
       <div>
@@ -67,6 +79,11 @@ export default function SupportPage() {
             </TabsList>
 
             <TabsContent value="contact" className="space-y-6">
+              <FeedbackButtons
+                user={session!.user}
+                userHash={userHash}
+                planName={planName}
+              />
               <SupportLinkBox
                 icon={Mail}
                 title="Email Support"
