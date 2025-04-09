@@ -247,12 +247,14 @@ export async function POST(req: Request) {
 
   return createDataStreamResponse({
     execute: (dataStream) => {
-      let generatedTitle: string | undefined = undefined;
       if (generateTitle) {
         // Generate the chat title
         pendingPromises.push(
           generateThreadTitle(messages[0].content).then((title) => {
-            dataStream.writeData({ type: "thread-metadata", title });
+            dataStream.writeData({
+              type: "thread-metadata",
+              generatedTitle: title,
+            });
           }),
         );
       }
@@ -269,6 +271,10 @@ export async function POST(req: Request) {
 
       const tools: Record<string, Tool> = {};
       if (!isFreePlan(user?.planName)) {
+        tools.generateImage = createGenerateImageTool(
+          dataStream,
+          session?.user.sub,
+        );
       }
 
       const result = streamText({
@@ -276,9 +282,7 @@ export async function POST(req: Request) {
         system: systemPrompt,
         maxSteps: 2,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
-        tools: {
-          generateImage: createGenerateImageTool(dataStream, session?.user.sub),
-        },
+        tools,
         onFinish: async ({ providerMetadata }) => {
           await Promise.all(pendingPromises);
           // Process provider metadata
