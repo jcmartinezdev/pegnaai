@@ -341,7 +341,7 @@ export async function POST(req: Request) {
 
             return {
               prompt: prompt,
-              result: "An image was generated.",
+              result: "An image was generated and displayed with the user.",
             };
           },
         });

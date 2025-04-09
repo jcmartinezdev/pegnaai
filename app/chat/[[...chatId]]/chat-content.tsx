@@ -1,4 +1,4 @@
-import { MessageModel } from "@/lib/localDb";
+import { MessageModel, MessageStatus } from "@/lib/localDb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent } from "@radix-ui/react-collapsible";
@@ -6,16 +6,15 @@ import { CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2 } from "lucide-react";
 import MarkdownContent from "@/components/markdown-content";
-import { MessageKind } from "@/lib/chat/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   message: MessageModel;
 };
 
-function LoadingChatContent({ kind }: { kind?: MessageKind }) {
-  switch (kind) {
-    case "image":
+function LoadingChatContent({ status }: { status?: MessageStatus }) {
+  switch (status) {
+    case "streaming-image":
       return (
         <div className="text-sm text-muted-foreground">
           <div className="flex items-center gap-2 mb-4">
@@ -25,7 +24,7 @@ function LoadingChatContent({ kind }: { kind?: MessageKind }) {
           <Skeleton className="rounded-xl h-96 w-96" />
         </div>
       );
-    case "text":
+    case "streaming":
     default:
       return (
         <div className="mt-4 flex text-sm gap-2 items-center text-muted-foreground">
@@ -37,7 +36,7 @@ function LoadingChatContent({ kind }: { kind?: MessageKind }) {
 }
 
 export default function ChatContent({
-  message: { content, kind, reasoning, searchMetadata, status },
+  message: { content, reasoning, searchMetadata, status },
 }: Props) {
   return (
     <div>
@@ -90,7 +89,9 @@ export default function ChatContent({
           </CardContent>
         </Card>
       )}
-      {status === "streaming" && <LoadingChatContent kind={kind} />}
+      {["streaming", "streaming-image"].includes(status) && (
+        <LoadingChatContent status={status} />
+      )}
     </div>
   );
 }

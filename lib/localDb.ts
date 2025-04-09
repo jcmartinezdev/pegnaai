@@ -22,6 +22,14 @@ export interface ThreadModel {
   synced: number;
 }
 
+export type MessageStatus =
+  | "done"
+  | "deleted"
+  | "streaming"
+  | "streaming-image"
+  | "cancelled"
+  | "error";
+
 export interface MessageModel {
   id: string;
   threadId: string;
@@ -39,7 +47,7 @@ export interface MessageModel {
   role: "assistant" | "user" | "system";
   createdAt: Date;
   updatedAt: Date;
-  status: "done" | "deleted" | "streaming" | "cancelled" | "error";
+  status: MessageStatus;
   synced: number;
 }
 

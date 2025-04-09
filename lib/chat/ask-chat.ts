@@ -175,6 +175,7 @@ export default async function processPegnaAIStream(
                   case "message-kind":
                     await chatDB.messages.update(responseMessageId, {
                       kind: data.value.kind,
+                      status: "streaming-image",
                       updatedAt: new Date(),
                     });
                     break;
@@ -200,6 +201,7 @@ export default async function processPegnaAIStream(
                         content:
                           (currentMessage?.content || "") +
                           `![${data.value.prompt}](${data.value.url})\n`,
+                        status: "streaming",
                         toolResponses: updatedToolResponses,
                         synced: 0,
                         updatedAt: new Date(),

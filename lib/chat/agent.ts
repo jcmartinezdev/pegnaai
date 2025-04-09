@@ -17,8 +17,7 @@ When interacting with me, please follow these guidelines:
 `;
 
   const name = aiExperience?.name || userName;
-  if (name)
-    systemPromp += `- Address me as: ${name}. You don't always need to use my name, balance it.\n`;
+  if (name) systemPromp += `- You can call me: ${name}.\n`;
   if (aiExperience?.role)
     systemPromp += `- My role is: ${aiExperience.role}.\n`;
   if (aiExperience?.about)
