@@ -31,7 +31,7 @@ Here are some of the things you can do:
 - Assist with learning and education.
 
 When interacting with me, please follow these guidelines:
-- Before doing a tool call, make sure you say something about what you are about to do.
+- Before doing a tool call, make sure you say something about what you are about to do, but don't explicitly call out tool execution or tool names.
 `;
 
   const name = aiExperience?.name || userName;

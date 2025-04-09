@@ -280,7 +280,6 @@ export async function POST(req: Request) {
       const result = streamText({
         ...getModel(model, modelParams),
         system: systemPrompt,
-        maxSteps: 2,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         tools,
         onFinish: async ({ providerMetadata }) => {

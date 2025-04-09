@@ -21,6 +21,7 @@ type Props = {
   defaultModel?: LlmModel;
   defaultModelParams?: ModelParams;
   defaultText?: string;
+  isStreaming: boolean;
   isLoggedIn: boolean;
   userPlan?: string;
   onProcessPegnaAIStream: (ask: AskModel) => Promise<void>;
@@ -34,6 +35,7 @@ type ChatFormInputs = {
 };
 
 export default function ChatForm({
+  isStreaming,
   threadId,
   defaultModel,
   defaultModelParams,
@@ -148,7 +150,12 @@ export default function ChatForm({
           }}
           {...register("content", { required: true })}
         />
-        <Button type="submit" variant="default" size="icon">
+        <Button
+          type="submit"
+          variant="default"
+          size="icon"
+          disabled={isStreaming}
+        >
           <Send className="size-5 -ml-0.5 -mb-0.5" />
         </Button>
       </div>
