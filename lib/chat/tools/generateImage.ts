@@ -28,6 +28,7 @@ export default function createGenerateImageTool(
       const { image } = await experimental_generateImage({
         model: openai.image("dall-e-3"),
         prompt,
+        size: "1024x1024",
       });
       // Increment the usage for a premium model for the user
       if (userId) {

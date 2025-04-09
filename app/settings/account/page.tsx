@@ -42,7 +42,7 @@ export default async function SubscriptionPage() {
                 <CardDescription>
                   {isFreePlan(user?.planName)
                     ? "You're currently on the free plan"
-                    : "Your subscription renews on June 15, 2024"}
+                    : "You're currently subscribed to the Pro plan"}
                 </CardDescription>
               </div>
             </div>
@@ -84,6 +84,15 @@ export default async function SubscriptionPage() {
                 <div className="mr-3 rounded-full p-1">
                   <Check className="h-4 w-4" />
                 </div>
+                <span>
+                  Access to advanced features like web search, high reasoning,
+                  and image generation.
+                </span>
+              </li>
+              <li className="flex items-center">
+                <div className="mr-3 rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
                 <span>Priority support</span>
               </li>
               <li className="flex items-center">
@@ -91,6 +100,30 @@ export default async function SubscriptionPage() {
                   <Check className="h-4 w-4" />
                 </div>
                 <span>Advanced customization options</span>
+              </li>
+            </ul>
+          </div>
+          <Separator className="my-6" />
+          <div>
+            <div className="mb-4">
+              <h4 className="text-base font-medium">Premium models:</h4>
+              <p className="text-sm text-muted-foreground">
+                The following features and models count towards your premium
+                quota.
+              </p>
+            </div>
+            <ul className="space-y-3">
+              <li className="flex items-center">
+                <div className="mr-3 rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
+                <span>Code generation model</span>
+              </li>
+              <li className="flex items-center">
+                <div className="mr-3 rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
+                <span>Image generation model</span>
               </li>
             </ul>
           </div>

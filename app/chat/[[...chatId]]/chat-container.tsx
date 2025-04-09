@@ -32,6 +32,7 @@ export default function ChatContainer({
   const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
   const { threadId, navigateToChat } = useChatRouter();
   const { state, isMobile } = useSidebar();
+  const [isStreaming, setIsStreaming] = useState(false);
   const syncEngine = useContext(SyncDataContext);
 
   // When the user selects a new chat, let's clear the remaining limits
@@ -40,7 +41,9 @@ export default function ChatContainer({
   }, [threadId]);
 
   async function onProcessPegnaAIStream(ask: AskModel) {
+    setIsStreaming(true);
     const response = await processPegnaAIStream(ask);
+    setIsStreaming(false);
     // Sync after sending a message
     syncEngine?.start();
     // Set the remaining limits
@@ -138,6 +141,7 @@ export default function ChatContainer({
             )}
 
           <ChatForm
+            isStreaming={isStreaming}
             isLoggedIn={isLoggedIn}
             userPlan={userPlan}
             threadId={threadId}
