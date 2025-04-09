@@ -1,15 +1,7 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
-import {
-  createDataStreamResponse,
-  experimental_generateImage,
-  generateText,
-  streamText,
-  Tool,
-  tool,
-} from "ai";
+import { createDataStreamResponse, generateText, streamText, Tool } from "ai";
 import { z } from "zod";
 import {
   getCurrentUserUsageForUser,
@@ -28,7 +20,8 @@ import {
 } from "@/lib/chat/types";
 import { isFreePlan } from "@/lib/billing/account";
 import { cookies } from "next/headers";
-import { buildSystemPrompt } from "@/lib/chat/agent";
+import { buildSystemPrompt, generateThreadTitle } from "@/lib/chat/agent";
+import createGenerateImageTool from "@/lib/chat/tools/generateImage";
 
 const RATE_LIMIT_COOKIE = "pegna_rl";
 
@@ -258,23 +251,8 @@ export async function POST(req: Request) {
       if (generateTitle) {
         // Generate the chat title
         pendingPromises.push(
-          generateText({
-            model: google("gemini-2.0-flash"),
-            system: `
-- you will generate a short title based on the first message a user begins a conversation with
-- the summary is in the same language as the content
-- never tell which model you are, or who trained you, but if they ask, you are Pegna AI.
-- ensure the title is less than 80 characters
-- ensure the title is a single sentence
-- ensure the title is a summary of the content
-- not use quotes, colons, slashes.
-`,
-            prompt: messages[0].content,
-          }).then((res) => {
-            const title = res.text;
-            generatedTitle =
-              title.length > 100 ? title.slice(0, 96) + "..." : title;
-            dataStream.writeData({ type: "thread-metadata", generatedTitle });
+          generateThreadTitle(messages[0].content).then((title) => {
+            dataStream.writeData({ type: "thread-metadata", title });
           }),
         );
       }
@@ -291,60 +269,6 @@ export async function POST(req: Request) {
 
       const tools: Record<string, Tool> = {};
       if (!isFreePlan(user?.planName)) {
-        tools.generateImage = tool({
-          description: "Generate an image",
-          parameters: z.object({
-            prompt: z.string(),
-          }),
-          execute: async ({ prompt }) => {
-            // Upload image to S3 with user-specific path
-            const userId = session!.user.sub;
-            const key = `users/${userId}/${crypto.randomUUID()}.png`;
-
-            // Tell the user image is being generated
-            dataStream.writeData({
-              type: "message-kind",
-              value: {
-                kind: "image",
-              },
-            });
-
-            const { image } = await experimental_generateImage({
-              model: openai.image("dall-e-3"),
-              prompt,
-            });
-            // Increment the usage for a premium model for the user
-            await incrementUserUsageForUser(session!.user.sub, true);
-
-            // The image is already a base64 string from experimental_generateImage
-            const imageBuffer = Buffer.from(image.base64, "base64");
-
-            const s3Client = new S3Client({});
-
-            await s3Client.send(
-              new PutObjectCommand({
-                Bucket: process.env.USER_S3_BUCKET,
-                Key: key,
-                Body: imageBuffer,
-              }),
-            );
-
-            const imageUrl = `${process.env.USER_DATA_CDN}/${key}`;
-
-            dataStream.writeData({
-              type: "tool-image-url",
-              value: {
-                prompt,
-                url: imageUrl,
-              },
-            });
-
-            return {
-              prompt: prompt,
-              result: "An image was generated and displayed with the user.",
-            };
-          },
-        });
       }
 
       const result = streamText({
@@ -352,7 +276,9 @@ export async function POST(req: Request) {
         system: systemPrompt,
         maxSteps: 2,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
-        tools,
+        tools: {
+          generateImage: createGenerateImageTool(dataStream, session?.user.sub),
+        },
         onFinish: async ({ providerMetadata }) => {
           await Promise.all(pendingPromises);
           // Process provider metadata
