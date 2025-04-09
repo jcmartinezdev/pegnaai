@@ -90,12 +90,26 @@ export async function POST(req: NextRequest) {
           subscriptionStatus: subscriptionStatus,
         });
 
-        await updateUser(userFromDb.id, {
-          planName: subscriptionStatus === "active" ? "pro" : "free",
-          stripeCustomerId: subscriptionCustomerId,
-          stripeSubscriptionId: subscription.id,
-          subscriptionStatus: subscriptionStatus,
-        });
+        // Only update the plan if the subscription is canceled or active
+        // Ignore other statuses like "incomplete", "past_due", etc.
+        // As they shouldn't trigger a plan change
+        if (
+          subscriptionStatus === "canceled" ||
+          subscriptionStatus === "active"
+        ) {
+          await updateUser(userFromDb.id, {
+            planName: subscriptionStatus === "active" ? "pro" : "free",
+            stripeCustomerId: subscriptionCustomerId,
+            stripeSubscriptionId: subscription.id,
+            subscriptionStatus: subscriptionStatus,
+          });
+        } else {
+          await updateUser(userFromDb.id, {
+            stripeCustomerId: subscriptionCustomerId,
+            stripeSubscriptionId: subscription.id,
+            subscriptionStatus: subscriptionStatus,
+          });
+        }
         break;
     }
   } catch (error) {

@@ -42,7 +42,7 @@ export default async function SubscriptionPage() {
                 <CardDescription>
                   {isFreePlan(user?.planName)
                     ? "You're currently on the free plan"
-                    : "Your subscription renews on June 15, 2024"}
+                    : "You're currently subscribed to the Pro plan"}
                 </CardDescription>
               </div>
             </div>
