@@ -99,6 +99,7 @@ export const messagesTable = pgTable(
     model: varchar("model", { length: 20 }).notNull(),
     modelParams: json("model_params").notNull(),
     content: text("content").notNull(),
+    kind: varchar("kind", { length: 20 }),
     toolResponses: json("tool_responses"),
     reasoning: text("reasoning"),
     searchMetadata: json("search_metadata"),

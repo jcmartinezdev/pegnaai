@@ -43,6 +43,7 @@ export async function localSyncData(
     ...message,
     localId: message.id,
     userId,
+    kind: message.kind || null,
     toolResponses: message.toolResponses || null,
     searchMetadata: message.searchMetadata || null,
     serverError: message.serverError || null,
@@ -114,6 +115,7 @@ export async function localSyncData(
       id: message.localId,
       model: message.model as LlmModel,
       modelParams: message.modelParams as ModelParams,
+      kind: (message.kind as "text" | "image") || undefined,
       toolResponses: (message.toolResponses as ToolResponse[]) || undefined,
       searchMetadata: (message.searchMetadata as SearchMetadata[]) || undefined,
       serverError:

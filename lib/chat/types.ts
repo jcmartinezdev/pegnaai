@@ -82,8 +82,11 @@ export type ToolResponse = {
   generateImage: {
     prompt?: string;
     url?: string;
+    result?: string;
   };
 };
+
+export type MessageKind = "text" | "image";
 
 export type CustomMetadataType =
   | {
@@ -99,6 +102,19 @@ export type CustomMetadataType =
       value: {
         remainingMessages: number;
         remainingPremiumMessages: number;
+      };
+    }
+  | {
+      type: "message-kind";
+      value: {
+        kind: MessageKind;
+      };
+    }
+  | {
+      type: "tool-image-url";
+      value: {
+        prompt: string;
+        url: string;
       };
     };
 

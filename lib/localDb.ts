@@ -3,6 +3,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import {
   LlmModel,
+  MessageKind,
   ModelParams,
   SearchMetadata,
   ToolResponse,
@@ -21,12 +22,21 @@ export interface ThreadModel {
   synced: number;
 }
 
+export type MessageStatus =
+  | "done"
+  | "deleted"
+  | "streaming"
+  | "streaming-image"
+  | "cancelled"
+  | "error";
+
 export interface MessageModel {
   id: string;
   threadId: string;
   model: LlmModel;
   modelParams: ModelParams;
   content: string;
+  kind?: MessageKind;
   toolResponses?: ToolResponse[];
   reasoning?: string;
   searchMetadata?: SearchMetadata[];
@@ -37,7 +47,7 @@ export interface MessageModel {
   role: "assistant" | "user" | "system";
   createdAt: Date;
   updatedAt: Date;
-  status: "done" | "deleted" | "streaming" | "cancelled" | "error";
+  status: MessageStatus;
   synced: number;
 }
 

@@ -1,4 +1,4 @@
-import { MessageModel } from "@/lib/localDb";
+import { MessageModel, MessageStatus } from "@/lib/localDb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent } from "@radix-ui/react-collapsible";
@@ -6,14 +6,37 @@ import { CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2 } from "lucide-react";
 import MarkdownContent from "@/components/markdown-content";
-import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   message: MessageModel;
 };
 
+function LoadingChatContent({ status }: { status?: MessageStatus }) {
+  switch (status) {
+    case "streaming-image":
+      return (
+        <div className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 mb-4">
+            <Loader2 className="animate-spin h-4 w-4" />
+            Generating image...
+          </div>
+          <Skeleton className="rounded-xl h-96 w-96" />
+        </div>
+      );
+    case "streaming":
+    default:
+      return (
+        <div className="mt-4 flex text-sm gap-2 items-center text-muted-foreground">
+          <Loader2 className="animate-spin h-4 w-4" />
+          Generating answer...
+        </div>
+      );
+  }
+}
+
 export default function ChatContent({
-  message: { content, toolResponses, reasoning, searchMetadata, status },
+  message: { content, reasoning, searchMetadata, status },
 }: Props) {
   return (
     <div>
@@ -38,25 +61,6 @@ export default function ChatContent({
         )}
         <MarkdownContent content={content} />
       </div>
-      {toolResponses?.map((toolResponse) => {
-        if (toolResponse.generateImage?.url) {
-          return (
-            <div
-              key={toolResponse.toolCallId}
-              className="relative mt-2 flex w-full flex-col"
-            >
-              <div className="w-full justify-between rounded-lg p-4 bg-secondary">
-                <Image
-                  width={512}
-                  height={512}
-                  src={toolResponse.generateImage.url}
-                  alt={toolResponse.generateImage?.prompt || "Generated image"}
-                />
-              </div>
-            </div>
-          );
-        }
-      })}
       {searchMetadata && (
         <Card className="gap-2 mt-6">
           <CardHeader>
@@ -85,11 +89,8 @@ export default function ChatContent({
           </CardContent>
         </Card>
       )}
-      {status === "streaming" && (
-        <div className="mt-4 flex text-sm gap-2 items-center text-muted-foreground">
-          <Loader2 className="animate-spin h-4 w-4" />
-          Generating answer...
-        </div>
+      {["streaming", "streaming-image"].includes(status) && (
+        <LoadingChatContent status={status} />
       )}
     </div>
   );
