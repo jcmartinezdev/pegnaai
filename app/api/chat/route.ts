@@ -1,7 +1,7 @@
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
-import { createDataStreamResponse, generateText, streamText, Tool } from "ai";
+import { createDataStreamResponse, streamText, Tool } from "ai";
 import { z } from "zod";
 import {
   getCurrentUserUsageForUser,
