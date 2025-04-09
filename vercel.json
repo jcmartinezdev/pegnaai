@@ -1,6 +1,6 @@
 {
   "functions": {
-    "/app/chat/route.ts": {
+    "app/chat/route.ts": {
       "maxDuration": 300
     }
   }
