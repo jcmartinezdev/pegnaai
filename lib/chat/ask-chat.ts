@@ -172,8 +172,45 @@ export default async function processPegnaAIStream(
                       ? data.value.remainingPremiumMessages
                       : data.value.remainingMessages;
                     break;
+                  case "message-kind":
+                    await chatDB.messages.update(responseMessageId, {
+                      kind: data.value.kind,
+                      updatedAt: new Date(),
+                    });
+                    break;
+                  case "tool-image-url":
+                    const toolImage = currentMessage?.toolResponses?.find(
+                      (tr) => tr.toolName === "generateImage",
+                    );
+                    if (toolImage) {
+                      const updatedToolResponses =
+                        currentMessage!.toolResponses!.map((tr) => {
+                          if (tr.toolCallId === toolImage.toolCallId) {
+                            return {
+                              ...tr,
+                              generateImage: {
+                                ...tr.generateImage,
+                                url: data.value.url,
+                              },
+                            };
+                          }
+                          return tr;
+                        });
+                      await chatDB.messages.update(responseMessageId, {
+                        content:
+                          (currentMessage?.content || "") +
+                          `![${data.value.prompt}](${data.value.url})\n`,
+                        toolResponses: updatedToolResponses,
+                        synced: 0,
+                        updatedAt: new Date(),
+                      });
+                    } else {
+                      console.error(
+                        `[STREAM] Tool image URL not found for ${data.value.url}`,
+                      );
+                    }
+                    break;
                 }
-                break;
               }
             }
           } catch (error) {
@@ -196,6 +233,7 @@ export default async function processPegnaAIStream(
         case "9": {
           // Tool call
           const data = content as unknown as ToolCallPart;
+          console.log(`[STREAM][${op}]:`, data);
           switch (data.toolName) {
             case "generateImage":
               const toolResult = data.args as unknown as {
@@ -222,8 +260,9 @@ export default async function processPegnaAIStream(
         case "a": {
           // Tool call result
           const data = content as unknown as ToolResultPart;
+          console.log(`[STREAM][${op}]:`, data);
           const toolResult = data.result as unknown as {
-            imageUrl: string;
+            result: string;
           };
           const toolResponses = currentMessage?.toolResponses || [];
           const currentToolResponse = toolResponses.find(
@@ -248,7 +287,7 @@ export default async function processPegnaAIStream(
                 ...tr,
                 generateImage: {
                   ...tr.generateImage,
-                  url: toolResult.imageUrl,
+                  result: toolResult?.result,
                 },
               };
             }

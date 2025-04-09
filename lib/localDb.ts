@@ -3,6 +3,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import {
   LlmModel,
+  MessageKind,
   ModelParams,
   SearchMetadata,
   ToolResponse,
@@ -27,6 +28,7 @@ export interface MessageModel {
   model: LlmModel;
   modelParams: ModelParams;
   content: string;
+  kind?: MessageKind;
   toolResponses?: ToolResponse[];
   reasoning?: string;
   searchMetadata?: SearchMetadata[];

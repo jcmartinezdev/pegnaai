@@ -301,6 +301,14 @@ export async function POST(req: Request) {
             const userId = session!.user.sub;
             const key = `users/${userId}/${crypto.randomUUID()}.png`;
 
+            // Tell the user image is being generated
+            dataStream.writeData({
+              type: "message-kind",
+              value: {
+                kind: "image",
+              },
+            });
+
             const { image } = await experimental_generateImage({
               model: openai.image("dall-e-3"),
               prompt,
@@ -323,8 +331,17 @@ export async function POST(req: Request) {
 
             const imageUrl = `${process.env.USER_DATA_CDN}/${key}`;
 
+            dataStream.writeData({
+              type: "tool-image-url",
+              value: {
+                prompt,
+                url: imageUrl,
+              },
+            });
+
             return {
-              imageUrl,
+              prompt: prompt,
+              result: "An image was generated.",
             };
           },
         });
@@ -333,6 +350,7 @@ export async function POST(req: Request) {
       const result = streamText({
         ...getModel(model, modelParams),
         system: systemPrompt,
+        maxSteps: 2,
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         tools,
         onFinish: async ({ providerMetadata }) => {

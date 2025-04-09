@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -8,6 +9,7 @@ import {
   oneLight as lightTheme,
   a11yDark as darkTheme,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
+import remarkGfm from "remark-gfm";
 
 type MarkdownContentProps = {
   content: string;
@@ -19,7 +21,38 @@ function MarkdownContent({ content }: MarkdownContentProps) {
   const memoizedContent = useMemo(
     () => (
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
+          img(props) {
+            const { alt, src } = props;
+            if (src) {
+              return (
+                <Image
+                  width={512}
+                  height={512}
+                  alt={alt || "Generated image"}
+                  src={src}
+                  className="rounded-xl border-8 mt-2 mb-2 border-secondary"
+                />
+              );
+            } else {
+              return (
+                <>
+                  <Image
+                    width={1024}
+                    height={1024}
+                    alt={alt || "Generated image"}
+                    src="/no-image.png"
+                    className="rounded-xl border-8 mt-2 mb-2 border-secondary"
+                  />
+                  <span className="block text-destructive">
+                    The image could not be rendered. Please try again.
+                  </span>
+                </>
+              );
+            }
+          },
+
           code(props) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { children, className, node, ref, ...rest } = props;
