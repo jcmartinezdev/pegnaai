@@ -18,6 +18,7 @@ const createDefaultDbThreadData = (): typeof threadsTable.$inferSelect => {
     createdAt: new Date(),
     updatedAt: new Date(),
     status: "active",
+    app: "chat",
   };
 };
 

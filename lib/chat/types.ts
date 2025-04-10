@@ -1,4 +1,5 @@
-export type LlmModel = "chat" | "code";
+export type LlmModel = "chat" | "code" | "writer";
+export type PegnaAppType = "chat" | "writer";
 
 export const traits = [
   {
@@ -39,7 +40,13 @@ type ModelType = {
   allowSearch: boolean;
   allowReasoning: boolean;
 
+  /**
+   * Whether the model requires a Pro plan to use
+   */
   requiresPro: boolean;
+  /**
+   * Whether the model counts towards your premium quota
+   */
   isPremium: boolean;
 };
 
@@ -57,6 +64,14 @@ export const models: Record<LlmModel, ModelType> = {
     description: "Code completion and generation.",
     allowSearch: false,
     allowReasoning: true,
+    requiresPro: true,
+    isPremium: true,
+  },
+  writer: {
+    name: "Writer",
+    description: "Optimized for writing and creative tasks.",
+    allowSearch: false,
+    allowReasoning: false,
     requiresPro: true,
     isPremium: true,
   },

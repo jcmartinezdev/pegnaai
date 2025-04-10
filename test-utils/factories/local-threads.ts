@@ -18,6 +18,7 @@ const createDefaultLocalThread = (): ThreadModel => {
     updatedAt: new Date(),
     status: "active",
     synced: 0,
+    app: "chat",
   };
 };
 

@@ -19,17 +19,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@auth0/nextjs-auth0/types";
 import Link from "next/link";
+import { PegnaAppType } from "@/lib/chat/types";
 
 type ChatSidebarProps = {
+  app: PegnaAppType;
   user?: User;
 };
 
-export default function ChatSidebar({ user }: ChatSidebarProps) {
+export default function AppSidebar({ user, app }: ChatSidebarProps) {
   const { threadId, navigateToChat } = useChatRouter();
   const { setOpenMobile } = useSidebar();
 
   const threads = useLiveQuery(() => {
-    return chatDB.getAllThreads();
+    return chatDB.getAllThreadsForApp(app);
   });
 
   function switchToChat(threadId: string) {

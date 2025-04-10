@@ -1,12 +1,11 @@
 "use client";
 
-console.log("[DB] Initializing chat database...");
-
 import Dexie, { type EntityTable } from "dexie";
 import {
   LlmModel,
   MessageKind,
   ModelParams,
+  PegnaAppType,
   SearchMetadata,
   ToolResponse,
 } from "./chat/types";
@@ -21,6 +20,7 @@ export interface ThreadModel {
   createdAt: Date;
   updatedAt: Date;
   status: "active" | "deleted";
+  app?: PegnaAppType;
   synced: number;
 }
 
@@ -62,8 +62,22 @@ export class ChatDB extends Dexie {
     this.version(1).stores({
       threads: "id, createdAt, status, synced",
       messages: "id, threadId, createdAt, status, synced",
-      limits: "id",
     });
+    this.version(2)
+      .stores({
+        threads: "id, createdAt, status, synced",
+        messages: "id, threadId, createdAt, status, synced",
+      })
+      .upgrade((tx) => {
+        console.log("Upgrading to version 2, supporting writer app");
+        tx.table("threads")
+          .toCollection()
+          .modify((thread) => {
+            if (thread.app === undefined) {
+              thread.app = "chat";
+            }
+          });
+      });
 
     this.threads = this.table("threads");
     this.messages = this.table("messages");
@@ -73,6 +87,15 @@ export class ChatDB extends Dexie {
     return await this.threads
       .where("status")
       .notEqual("deleted")
+      .reverse()
+      .sortBy("lastMessageAt");
+  }
+
+  async getAllThreadsForApp(app: AppType) {
+    return await this.threads
+      .where("status")
+      .notEqual("deleted")
+      .and((thread) => thread.app === app)
       .reverse()
       .sortBy("lastMessageAt");
   }

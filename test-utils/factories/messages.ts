@@ -14,6 +14,7 @@ const createDefaultDbMessageData = (): typeof messagesTable.$inferSelect => {
     model: "chat" as LlmModel,
     modelParams: {},
     content: faker.lorem.paragraphs({ min: 4, max: 10 }),
+    document: null,
     kind: "text",
     toolResponses: null,
     reasoning: faker.lorem.paragraphs({ min: 1, max: 3 }),

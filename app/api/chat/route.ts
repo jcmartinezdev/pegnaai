@@ -55,6 +55,12 @@ const modelSettings: Record<LlmModel, Record<string, ModelSelectorItem>> = {
       modelName: "claude-3-7-sonnet-20250219",
     },
   },
+  writer: {
+    _default: {
+      provider: "openai",
+      modelName: "gpt-4o",
+    },
+  },
 };
 
 const getModelSettings = (
