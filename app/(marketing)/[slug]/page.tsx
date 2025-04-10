@@ -17,7 +17,6 @@ export async function generateStaticParams() {
         slug: file.replace(/\.mdx$/, ""),
       }));
   } catch (error) {
-    console.error("Error reading content directory:", error);
     return [];
   }
 }
@@ -28,7 +27,6 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  console.log("Generating metadata for slug:", slug);
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",
