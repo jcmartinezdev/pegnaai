@@ -94,7 +94,7 @@ export default async function MarketingPage({
         </main>
       </div>
     );
-  } catch (error) {
+  } catch {
     notFound();
   }
 }
