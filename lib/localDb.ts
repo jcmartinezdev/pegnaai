@@ -1,5 +1,7 @@
 "use client";
 
+console.log("[DB] Initializing chat database...");
+
 import Dexie, { type EntityTable } from "dexie";
 import {
   LlmModel,
@@ -225,4 +227,6 @@ export class ChatDB extends Dexie {
 }
 
 export const chatDB = new ChatDB();
-chatDB.open().catch(console.error);
+if (typeof window !== "undefined") {
+  chatDB.open().catch(console.error);
+}
