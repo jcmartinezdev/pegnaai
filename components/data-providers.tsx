@@ -5,7 +5,7 @@ import { SyncDataProvider } from "@/components/sync-data-provider";
 
 const browserQueryClient = new QueryClient();
 
-export default function Providers({
+export default function DataProviders({
   children,
   userId,
 }: {
