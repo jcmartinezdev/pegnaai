@@ -29,6 +29,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  console.log("Generating metadata for slug:", slug);
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",
@@ -57,6 +58,7 @@ export default async function MarketingPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  console.log("Generating page for slug:", slug);
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",
@@ -94,11 +96,6 @@ export default async function MarketingPage({
       </div>
     );
   } catch (error) {
-    Sentry.captureException(error);
-    console.error(
-      "Error reading file, this should have never happened:",
-      error,
-    );
     notFound();
   }
 }
