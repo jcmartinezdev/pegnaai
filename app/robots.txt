@@ -1,0 +1,8 @@
+User-Agent: *
+Allow: /
+Disallow: /chat/
+Disallow: /writer/
+Disallow: /auth/
+Disallow: /api/
+
+Sitemap: https://pegna.ai/sitemap.xml
