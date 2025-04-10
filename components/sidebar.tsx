@@ -3,7 +3,6 @@
 import { MessageSquare, Plus } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/localDb";
-import { useChatRouter } from "@/lib/chat/chatRouter";
 import {
   Sidebar,
   SidebarContent,
@@ -19,24 +18,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@auth0/nextjs-auth0/types";
 import Link from "next/link";
-import { PegnaAppType } from "@/lib/chat/types";
+import { useThreadRouter } from "./thread-router";
 
-type ChatSidebarProps = {
-  app: PegnaAppType;
+type AppSidebarProps = {
   user?: User;
 };
 
-export default function AppSidebar({ user, app }: ChatSidebarProps) {
-  const { threadId, navigateToChat } = useChatRouter();
+export default function AppSidebar({ user }: AppSidebarProps) {
+  const { threadId, currentApp, navigateToThread } = useThreadRouter();
   const { setOpenMobile } = useSidebar();
 
   const threads = useLiveQuery(() => {
-    return chatDB.getAllThreadsForApp(app);
-  });
+    return chatDB.getAllThreadsForApp(currentApp);
+  }, [currentApp]);
 
-  function switchToChat(threadId: string) {
-    navigateToChat(threadId);
+  function switchToThread(threadId: string) {
+    navigateToThread(threadId);
     setOpenMobile(false);
+  }
+
+  function getNewButtonText() {
+    switch (currentApp) {
+      case "chat":
+        return "New Chat";
+      case "writer":
+        return "New Document";
+      default:
+        return "New";
+    }
   }
 
   return (
@@ -46,8 +55,8 @@ export default function AppSidebar({ user, app }: ChatSidebarProps) {
           <SidebarTrigger />
           <h1>Pegna.ai</h1>
         </div>
-        <Button className="w-full" onClick={() => switchToChat("")}>
-          New Chat
+        <Button className="w-full" onClick={() => switchToThread("")}>
+          {getNewButtonText()}
           <Plus />
         </Button>
       </SidebarHeader>
@@ -57,7 +66,7 @@ export default function AppSidebar({ user, app }: ChatSidebarProps) {
             {threads?.map((thread) => (
               <SidebarMenuItem key={thread.id} data-thread-id={thread.id}>
                 <SidebarMenuButton
-                  onClick={() => switchToChat(thread.id)}
+                  onClick={() => switchToThread(thread.id)}
                   isActive={thread.id === threadId}
                   className="w-full justify-start"
                 >
@@ -90,7 +99,7 @@ export default function AppSidebar({ user, app }: ChatSidebarProps) {
             </Button>
           ) : (
             <Button variant="ghost" asChild>
-              <Link href="/auth/login?returnTo=/chat">Log in</Link>
+              <Link href={`/auth/login?returnTo=/${currentApp}`}>Log in</Link>
             </Button>
           )}
         </div>

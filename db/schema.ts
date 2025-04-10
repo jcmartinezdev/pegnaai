@@ -69,6 +69,7 @@ export const threadsTable = pgTable(
     model: varchar("model", { length: 20 }).notNull(),
     modelParams: json("model_params").notNull(),
     pinned: boolean("pinned").default(false).notNull(),
+    document: text("document"),
     lastMessageAt: timestamp("last_message_at", {
       mode: "date",
       withTimezone: true,
@@ -100,7 +101,6 @@ export const messagesTable = pgTable(
     model: varchar("model", { length: 20 }).notNull(),
     modelParams: json("model_params").notNull(),
     content: text("content").notNull(),
-    document: text("document"),
     kind: varchar("kind", { length: 20 }),
     toolResponses: json("tool_responses"),
     reasoning: text("reasoning"),

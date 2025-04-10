@@ -8,13 +8,15 @@ import {
   PegnaAppType,
   SearchMetadata,
   ToolResponse,
-} from "./chat/types";
+} from "./ai/types";
 
 export interface ThreadModel {
   id: string;
   title: string;
   model: LlmModel;
   modelParams: ModelParams;
+  document?: string;
+  documentProposedDiff?: string;
   pinned: boolean;
   lastMessageAt: Date;
   createdAt: Date;
@@ -91,7 +93,7 @@ export class ChatDB extends Dexie {
       .sortBy("lastMessageAt");
   }
 
-  async getAllThreadsForApp(app: AppType) {
+  async getAllThreadsForApp(app: PegnaAppType) {
     return await this.threads
       .where("status")
       .notEqual("deleted")

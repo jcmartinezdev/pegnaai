@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Brain, ChevronDown, Globe } from "lucide-react";
-import { LlmModel, models } from "@/lib/chat/types";
+import { LlmModel, models } from "@/lib/ai/types";
 import {
   Tooltip,
   TooltipContent,

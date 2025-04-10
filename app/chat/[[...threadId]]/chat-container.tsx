@@ -1,23 +1,19 @@
 "use client";
 
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { useChatRouter } from "@/lib/chat/chatRouter";
 import { chatDB } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Plus } from "lucide-react";
 import ChatForm from "./chat-form";
 import { useContext, useEffect, useState } from "react";
-import processPegnaAIStream from "@/lib/chat/ask-chat";
-import { AskModel } from "@/lib/chat/types";
+import processPegnaAIStream from "@/lib/ai/ask-chat";
+import { AskModel } from "@/lib/ai/types";
 import ChatLimitBanner from "./chat-limit-banner";
 import ChatScrollContainer from "./chat-scroll-container";
 import ChatSuggestions from "./chat-suggestions";
 import { cn } from "@/lib/utils";
 import ChatContent from "./chat-content";
 import { SyncDataContext } from "@/components/sync-data-provider";
+import { useThreadRouter } from "@/components/thread-router";
+import AppHeader from "@/components/app-header";
 
 type ChatContainerProps = {
   userPlan?: string;
@@ -30,8 +26,7 @@ export default function ChatContainer({
 }: ChatContainerProps) {
   const [remainingLimits, setRemainingLimits] = useState<number | undefined>();
   const [suggestion, setSuggestion] = useState<string | undefined>(undefined);
-  const { threadId, navigateToChat } = useChatRouter();
-  const { state, isMobile } = useSidebar();
+  const { threadId, navigateToThread } = useThreadRouter();
   const [isStreaming, setIsStreaming] = useState(false);
   const syncEngine = useContext(SyncDataContext);
 
@@ -54,7 +49,7 @@ export default function ChatContainer({
     if (threadId !== "") {
       const _thread = await chatDB.getThread(threadId);
       if (!_thread) {
-        navigateToChat("");
+        navigateToThread("");
       }
       return _thread;
     }
@@ -70,26 +65,7 @@ export default function ChatContainer({
 
   return (
     <>
-      <header className="flex py-2 shrink-0 items-center gap-2 border-b">
-        <div className="flex items-center gap-2 px-3 w-full">
-          {(state === "collapsed" || isMobile) && (
-            <>
-              <SidebarTrigger />
-              <Button
-                variant="ghost"
-                className="w-7 h-7"
-                onClick={() => navigateToChat("")}
-              >
-                <Plus />
-              </Button>
-              <Separator orientation="vertical" className="mr-2 h-4" />
-            </>
-          )}
-          <div className="truncate">{thread?.title || "New Chat"}</div>
-          <div className="flex-grow"></div>
-          <ThemeSwitcher />
-        </div>
-      </header>
+      <AppHeader thread={thread} />
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
         <ChatScrollContainer messagesCount={messages?.length || 0}>
           {messages?.length === 0 && (
