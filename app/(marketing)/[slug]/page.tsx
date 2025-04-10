@@ -80,7 +80,13 @@ export default async function MarketingPage({
               aria-label="Published date"
               className="text-gray-800 dark:text-gray-300"
             >
-              Last Updated: {data.lastUpdated}
+              Last Updated:{" "}
+              {data.lastUpdated.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </span>
           </div>
           <MarkdownContent content={content} />{" "}
