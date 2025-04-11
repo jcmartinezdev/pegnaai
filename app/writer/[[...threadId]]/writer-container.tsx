@@ -7,8 +7,9 @@ import processPegnaAIStream from "@/lib/ai/ask-chat";
 import { AskModel } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
+import dynamic from "next/dynamic";
 import { useCallback, useContext, useEffect, useState } from "react";
-import WriterEditor from "./writer-editor";
+const WriterEditor = dynamic(() => import("./writer-editor"), { ssr: false });
 
 export default function WriterContainer() {
   const { threadId, navigateToThread } = useThreadRouter();
@@ -64,11 +65,13 @@ export default function WriterContainer() {
     <>
       <AppHeader thread={thread} />
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
-        <WriterEditor
-          document={thread?.document || ""}
-          proposedDiff={thread?.documentProposedDiff}
-          onChange={onEditorChange}
-        />
+        <div className="overflow-y-auto">
+          <WriterEditor
+            document={thread?.document || ""}
+            proposedDiff={thread?.documentProposedDiff}
+            onChange={onEditorChange}
+          />
+        </div>
       </div>
     </>
   );
