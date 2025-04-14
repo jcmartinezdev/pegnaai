@@ -77,6 +77,7 @@ export default function WriterNewDocumentForm({
       >
         <div className="flex items-start">
           <TextareaAutosize
+            autoFocus
             className="focus-visible:ring-0 border-0 shadow-none outline-none rounded-none resize-none p-0"
             minRows={1}
             maxRows={12}

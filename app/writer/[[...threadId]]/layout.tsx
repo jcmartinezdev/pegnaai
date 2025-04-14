@@ -16,7 +16,7 @@ export default async function ChatLayout({
       <ThreadRouterProvider>
         <SidebarProvider>
           <div className="relative w-full flex h-dvh bg-background text-foreground">
-            <AppSidebar app="chat" user={session?.user} />
+            <AppSidebar user={session?.user} />
             <SidebarInset>{children}</SidebarInset>
           </div>
         </SidebarProvider>

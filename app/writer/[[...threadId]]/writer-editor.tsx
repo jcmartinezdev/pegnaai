@@ -212,7 +212,13 @@ function WriterEditor({
         extensions={extensions}
       />
     );
-  }, [document, proposedDiff, debouncedHandleEditorChange, onRejectProposal]);
+  }, [
+    document,
+    proposedDiff,
+    debouncedHandleEditorChange,
+    onRejectProposal,
+    isStreaming,
+  ]);
 
   return memoizedEditor;
 }

@@ -4,6 +4,7 @@ import { TextareaAutosize } from "@/components/ui/textarea";
 import { WriterModel } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
 import { Send } from "lucide-react";
+import { useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 type NewDocumentFormParams = {
@@ -20,11 +21,16 @@ export default function WriterUpdateDocumentForm({
   onGenerateText,
 }: WriterUpdateDocumentFormProps) {
   const { threadId } = useThreadRouter();
-  const { register, handleSubmit, reset } = useForm<NewDocumentFormParams>({
-    defaultValues: {
-      prompt: "",
-    },
-  });
+  const { register, handleSubmit, reset, setFocus } =
+    useForm<NewDocumentFormParams>({
+      defaultValues: {
+        prompt: "",
+      },
+    });
+
+  useEffect(() => {
+    setFocus("prompt");
+  }, [setFocus, threadId]);
 
   const onSubmit: SubmitHandler<NewDocumentFormParams> = async (data) => {
     // Save the user message to the DB

@@ -9,7 +9,7 @@ import {
 } from "@/lib/ai/types";
 import { buildWriterSystemPrompt, generateThreadTitle } from "@/lib/ai/agent";
 import { validateRateLimits } from "@/lib/billing/rate-limits";
-import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 
 const askModelSchema = z.object({
   threadId: z.string(),
@@ -27,7 +27,7 @@ const askModelSchema = z.object({
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { success, data, error } = askModelSchema.safeParse(body);
+  const { success, data } = askModelSchema.safeParse(body);
   if (!success) {
     return new Response(
       JSON.stringify({ message: "Invalid request", type: "invalid_request" }),
@@ -84,9 +84,10 @@ export async function POST(req: Request) {
       }
 
       const { fullStream } = streamText({
-        model: openai("gpt-4o"),
+        model: google("gemini-2.0-flash"),
         system: systemPrompt,
         prompt: prompt,
+        maxTokens: 1_000_000,
         onFinish: async () => {
           await Promise.all(pendingPromises);
         },

@@ -1,6 +1,7 @@
 "use client";
 
 import { PegnaAppType } from "@/lib/ai/types";
+import { redirect } from "next/navigation";
 import {
   createContext,
   ReactNode,
@@ -13,7 +14,7 @@ import {
 interface ThreadRouterContextType {
   currentApp: PegnaAppType | undefined;
   threadId: string;
-  navigateToThread: (threadId: string) => void;
+  navigateToThread: (threadId: string, app?: PegnaAppType) => void;
 }
 
 const ThreadRouterContext = createContext<ThreadRouterContextType | undefined>(
@@ -62,10 +63,18 @@ export const ThreadRouterProvider = ({
   );
 
   const navigateToThread = useCallback(
-    (newThreadId: string) => {
-      if (newThreadId !== threadId && currentApp) {
-        setThreadId(newThreadId);
-        window.history.pushState({}, "", `/${currentApp}/${newThreadId}`);
+    (newThreadId: string, app?: PegnaAppType) => {
+      if (app && app !== currentApp) {
+        redirect(`/${app}/${newThreadId}`);
+      } else {
+        if (newThreadId !== threadId && currentApp) {
+          setThreadId(newThreadId);
+          window.history.pushState(
+            {},
+            "",
+            `/${app ? app : currentApp}/${newThreadId}`,
+          );
+        }
       }
     },
     [threadId, currentApp],

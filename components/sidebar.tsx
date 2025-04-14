@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { User } from "@auth0/nextjs-auth0/types";
 import Link from "next/link";
 import { useThreadRouter } from "./thread-router";
+import NewAppButton from "./new-app-button";
 
 type AppSidebarProps = {
   user?: User;
@@ -29,23 +30,12 @@ export default function AppSidebar({ user }: AppSidebarProps) {
   const { setOpenMobile } = useSidebar();
 
   const threads = useLiveQuery(() => {
-    return chatDB.getAllThreadsForApp(currentApp);
+    return chatDB.getAllThreadsForApp(currentApp || "chat");
   }, [currentApp]);
 
   function switchToThread(threadId: string) {
     navigateToThread(threadId);
     setOpenMobile(false);
-  }
-
-  function getNewButtonText() {
-    switch (currentApp) {
-      case "chat":
-        return "New Chat";
-      case "writer":
-        return "New Document";
-      default:
-        return "New";
-    }
   }
 
   return (
@@ -55,10 +45,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
           <SidebarTrigger />
           <h1>Pegna.ai</h1>
         </div>
-        <Button className="w-full" onClick={() => switchToThread("")}>
-          {getNewButtonText()}
-          <Plus />
-        </Button>
+        <NewAppButton />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
