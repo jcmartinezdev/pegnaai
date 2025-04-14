@@ -37,6 +37,14 @@ export default function WriterContainer() {
     [threadId],
   );
 
+  const onRejectProposal = useCallback(async () => {
+    await chatDB.threads.update(threadId, {
+      documentProposedDiff: "",
+      updatedAt: new Date(),
+      synced: 0,
+    });
+  }, [threadId]);
+
   async function onGenerateText(ask: WriterModel) {
     setIsStreaming(true);
     const response = await askPegnaAIToGenerateText(ask);
@@ -81,6 +89,7 @@ export default function WriterContainer() {
                 document={thread?.document || ""}
                 proposedDiff={thread?.documentProposedDiff}
                 onChange={onEditorChange}
+                onRejectProposal={onRejectProposal}
               />
               <WriterUpdateDocumentForm
                 isStreaming={isStreaming}

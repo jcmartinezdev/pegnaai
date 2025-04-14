@@ -7,12 +7,14 @@ import { useDebouncedCallback } from "use-debounce";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { Button } from "@/components/ui/button";
 
 type WriterEditorProps = {
   isStreaming?: boolean;
   document: string;
   proposedDiff?: string;
   onChange: (value?: string) => void;
+  onRejectProposal: () => void;
 };
 
 const markdownHighlightStyle = HighlightStyle.define([
@@ -126,40 +128,73 @@ function WriterEditor({
   document,
   proposedDiff,
   onChange,
+  onRejectProposal,
 }: WriterEditorProps) {
   const debouncedHandleEditorChange = useDebouncedCallback(onChange, 500);
 
   const memoizedEditor = useMemo(() => {
     if (proposedDiff && proposedDiff.length > 0 && proposedDiff !== document) {
       return (
-        <CodeMirrorMerge
-          className="text-lg"
-          gutter={true}
-          revertControls="b-to-a"
-          destroyRerender={false}
-        >
-          <CodeMirrorMerge.Original
-            basicSetup={{
-              lineNumbers: false,
-              foldGutter: false,
-              highlightSelectionMatches: false,
-            }}
-            onChange={debouncedHandleEditorChange}
-            readOnly={isStreaming}
-            value={document}
-            extensions={extensions}
-          />
-          <CodeMirrorMerge.Modified
-            basicSetup={{
-              lineNumbers: false,
-              foldGutter: false,
-              highlightSelectionMatches: false,
-            }}
-            readOnly={true}
-            value={proposedDiff}
-            extensions={extensions}
-          />
-        </CodeMirrorMerge>
+        <>
+          <div className="flex w-full items-stretch border-b mb-2 pb-2">
+            <div className="flex-grow">
+              <div className="mx-auto max-w-5xl text-xl flex justify-between items-center">
+                Original
+                <Button
+                  variant="destructive"
+                  disabled={isStreaming}
+                  onClick={() => {
+                    onRejectProposal();
+                  }}
+                >
+                  Discard Proposal
+                </Button>
+              </div>
+            </div>
+            <div className="w-12">&nbsp;</div>
+            <div className="flex-grow">
+              <div className="mx-auto max-w-5xl text-xl flex justify-between items-center">
+                Proposal
+                <Button
+                  disabled={isStreaming}
+                  onClick={() => {
+                    debouncedHandleEditorChange(proposedDiff);
+                  }}
+                >
+                  Accept Full Proposal
+                </Button>
+              </div>
+            </div>
+          </div>
+          <CodeMirrorMerge
+            className="text-lg"
+            gutter={true}
+            revertControls="b-to-a"
+            destroyRerender={false}
+          >
+            <CodeMirrorMerge.Original
+              basicSetup={{
+                lineNumbers: false,
+                foldGutter: false,
+                highlightSelectionMatches: false,
+              }}
+              onChange={debouncedHandleEditorChange}
+              readOnly={isStreaming}
+              value={document}
+              extensions={extensions}
+            />
+            <CodeMirrorMerge.Modified
+              basicSetup={{
+                lineNumbers: false,
+                foldGutter: false,
+                highlightSelectionMatches: false,
+              }}
+              readOnly={true}
+              value={proposedDiff}
+              extensions={extensions}
+            />
+          </CodeMirrorMerge>
+        </>
       );
     }
     return (
@@ -177,7 +212,7 @@ function WriterEditor({
         extensions={extensions}
       />
     );
-  }, [document, proposedDiff, debouncedHandleEditorChange]);
+  }, [document, proposedDiff, debouncedHandleEditorChange, onRejectProposal]);
 
   return memoizedEditor;
 }
