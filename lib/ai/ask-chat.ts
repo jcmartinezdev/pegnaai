@@ -6,7 +6,9 @@ import {
   AskModel,
   CustomMetadataType,
   FinishedStreamType,
+  LlmModel,
   models,
+  WriterModel,
 } from "./types";
 
 interface ResponsePegnaAIStream {
@@ -15,9 +17,10 @@ interface ResponsePegnaAIStream {
   error?: string;
 }
 
-export default async function processPegnaAIStream(
-  ask: AskModel,
-): Promise<ResponsePegnaAIStream> {
+/**
+ * Sends a request to the PegnaAI API and processes the response.
+ */
+export async function askPegnaAI(ask: AskModel) {
   const responseMessageId = await chatDB.addMessage({
     threadId: ask.threadId,
     content: "",
@@ -36,6 +39,50 @@ export default async function processPegnaAIStream(
     body: JSON.stringify({ ...ask }),
   });
 
+  return await processPegnaAIStream(
+    responseMessageId,
+    ask.threadId,
+    ask.model,
+    response,
+  );
+}
+
+export async function askPegnaAIToGenerateText(ask: WriterModel) {
+  const responseMessageId = await chatDB.addMessage({
+    threadId: ask.threadId,
+    content: "",
+    role: "assistant",
+    status: "streaming",
+    model: "writer",
+    modelParams: ask.modelParams,
+    synced: 0,
+  });
+
+  const response = await fetch("/api/writer", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ...ask }),
+  });
+
+  return await processPegnaAIStream(
+    responseMessageId,
+    ask.threadId,
+    "writer",
+    response,
+  );
+}
+
+/**
+ * Processes the PegnaAI stream response and updates the local database.
+ */
+async function processPegnaAIStream(
+  responseMessageId: string,
+  threadId: string,
+  model: LlmModel,
+  response: Response,
+): Promise<ResponsePegnaAIStream> {
   if (!response.ok) {
     console.error("[STREAM] Failed to fetch response", response);
 
@@ -154,7 +201,7 @@ export default async function processPegnaAIStream(
                 console.log(`[STREAM][${op}]:`, data);
                 switch (data.type) {
                   case "thread-metadata":
-                    await chatDB.threads.update(ask.threadId, {
+                    await chatDB.threads.update(threadId, {
                       title: data.generatedTitle,
                       synced: 0,
                       updatedAt: new Date(),
@@ -168,7 +215,7 @@ export default async function processPegnaAIStream(
                     });
                     break;
                   case "rate-limit":
-                    remainingMessages = models[ask.model].isPremium
+                    remainingMessages = models[model].isPremium
                       ? data.value.remainingPremiumMessages
                       : data.value.remainingMessages;
                     break;
@@ -176,6 +223,32 @@ export default async function processPegnaAIStream(
                     await chatDB.messages.update(responseMessageId, {
                       kind: data.value.kind,
                       status: "streaming-image",
+                      updatedAt: new Date(),
+                    });
+                    break;
+                  case "document-clear":
+                    await chatDB.threads.update(threadId, {
+                      documentProposedDiff: "",
+                      synced: 0,
+                      updatedAt: new Date(),
+                    });
+                    break;
+                  case "document-delta":
+                    await chatDB.threads.update(threadId, {
+                      document:
+                        ((await chatDB.threads.get(threadId))?.document || "") +
+                        data.delta.replace(/^"|"$/g, ""),
+                      synced: 0,
+                      updatedAt: new Date(),
+                    });
+                    break;
+                  case "document-diff-delta":
+                    await chatDB.threads.update(threadId, {
+                      documentProposedDiff:
+                        ((await chatDB.threads.get(threadId))
+                          ?.documentProposedDiff || "") +
+                        data.delta.replace(/^"|"$/g, ""),
+                      synced: 0,
                       updatedAt: new Date(),
                     });
                     break;
@@ -314,19 +387,19 @@ export default async function processPegnaAIStream(
             switch (finishReason) {
               case "stop":
               case "tool-calls":
-                await chatDB.markMessageDone(responseMessageId, ask.threadId);
+                await chatDB.markMessageDone(responseMessageId, threadId);
                 break;
               case "length":
                 await chatDB.markMessageDone(
                   responseMessageId,
-                  ask.threadId,
+                  threadId,
                   "\n\n **Message too long, stopping here.**",
                 );
                 break;
               case "content-filter":
                 await chatDB.markMessageDone(
                   responseMessageId,
-                  ask.threadId,
+                  threadId,
                   "\n\n **Our models flagged your prompt. Please edit your last message or start a new thread.**",
                 );
                 break;

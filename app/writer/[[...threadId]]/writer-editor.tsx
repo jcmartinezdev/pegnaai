@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
+import CodeMirrorMerge from "react-codemirror-merge";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { useDebouncedCallback } from "use-debounce";
@@ -8,6 +9,7 @@ import { tags } from "@lezer/highlight";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 
 type WriterEditorProps = {
+  isStreaming?: boolean;
   document: string;
   proposedDiff?: string;
   onChange: (value?: string) => void;
@@ -70,10 +72,96 @@ const markdownHighlightStyle = HighlightStyle.define([
   },
 ]);
 
-function WriterEditor({ document, proposedDiff, onChange }: WriterEditorProps) {
+const extensions = [
+  markdown({ base: markdownLanguage, codeLanguages: languages }),
+  EditorView.lineWrapping,
+  EditorView.theme({
+    "&.cm-editor": {
+      backgroundColor: "var(--background)",
+      color: "var(--text)",
+      maxWidth: "var(--container-5xl)",
+      margin: "0 auto",
+    },
+    "&.cm-editor.cm-focused": {
+      outline: "none",
+    },
+    "&.cm-editor .cm-line": {
+      paddingLeft: "5rem",
+      paddingRight: "5rem",
+      caretColor: "var(--primary) !important",
+    },
+    "& .cm-selectionMatch, & .cm-searchMatch": {
+      display: "inline-block",
+      backgroundColor: "color-mix(in oklab, var(--primary) 50%, transparent)",
+    },
+    "&.cm-editor .cm-line ::selection": {
+      backgroundColor:
+        "color-mix(in oklab, var(--primary) 50%, transparent) !important",
+    },
+    "& .cm-activeLine": {
+      backgroundColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
+    },
+    "& .cm-line:has(.cm-list)": {
+      paddingLeft: "6.5rem",
+      paddingRight: "5rem",
+    },
+    "& .cm-line:has(.cm-list) > :first-child": {
+      marginLeft: "-1.5rem",
+    },
+    "& .cm-line:has(.cm-h1) > :first-child": {
+      marginLeft: "-1.5rem",
+    },
+    "& .cm-line:has(.cm-h2) > :first-child": {
+      marginLeft: "-2.2rem",
+    },
+    "& .cm-line:has(.cm-h) > :first-child": {
+      marginLeft: "-2.8rem",
+    },
+  }),
+  syntaxHighlighting(markdownHighlightStyle),
+];
+
+function WriterEditor({
+  isStreaming,
+  document,
+  proposedDiff,
+  onChange,
+}: WriterEditorProps) {
   const debouncedHandleEditorChange = useDebouncedCallback(onChange, 500);
 
   const memoizedEditor = useMemo(() => {
+    if (proposedDiff && proposedDiff.length > 0 && proposedDiff !== document) {
+      return (
+        <CodeMirrorMerge
+          className="text-lg"
+          gutter={true}
+          revertControls="b-to-a"
+          destroyRerender={false}
+        >
+          <CodeMirrorMerge.Original
+            basicSetup={{
+              lineNumbers: false,
+              foldGutter: false,
+              highlightSelectionMatches: false,
+            }}
+            onChange={debouncedHandleEditorChange}
+            readOnly={isStreaming}
+            value={document}
+            extensions={extensions}
+          />
+          <CodeMirrorMerge.Modified
+            basicSetup={{
+              lineNumbers: false,
+              foldGutter: false,
+              highlightSelectionMatches: false,
+            }}
+            readOnly={true}
+            value={proposedDiff}
+            extensions={extensions}
+          />
+        </CodeMirrorMerge>
+      );
+    }
     return (
       <CodeMirror
         value={document}
@@ -84,58 +172,9 @@ function WriterEditor({ document, proposedDiff, onChange }: WriterEditorProps) {
           foldGutter: false,
           highlightSelectionMatches: false,
         }}
+        readOnly={isStreaming}
         height="100%"
-        extensions={[
-          markdown({ base: markdownLanguage, codeLanguages: languages }),
-          EditorView.lineWrapping,
-          EditorView.theme({
-            "&.cm-editor": {
-              backgroundColor: "var(--background)",
-              color: "var(--text)",
-              maxWidth: "var(--container-5xl)",
-              margin: "0 auto",
-              padding: "3rem 0",
-            },
-            "&.cm-editor.cm-focused": {
-              outline: "none",
-            },
-            "&.cm-editor .cm-line": {
-              paddingLeft: "5rem",
-              paddingRight: "5rem",
-              caretColor: "var(--primary) !important",
-            },
-            "& .cm-selectionMatch, & .cm-searchMatch": {
-              display: "inline-block",
-              backgroundColor:
-                "color-mix(in oklab, var(--primary) 50%, transparent)",
-            },
-            "&.cm-editor .cm-line ::selection": {
-              backgroundColor:
-                "color-mix(in oklab, var(--primary) 50%, transparent) !important",
-            },
-            "& .cm-activeLine": {
-              backgroundColor:
-                "color-mix(in oklab, var(--primary) 10%, transparent)",
-            },
-            "& .cm-line:has(.cm-list)": {
-              paddingLeft: "6.5rem",
-              paddingRight: "5rem",
-            },
-            "& .cm-line:has(.cm-list) > :first-child": {
-              marginLeft: "-1.5rem",
-            },
-            "& .cm-line:has(.cm-h1) > :first-child": {
-              marginLeft: "-1.5rem",
-            },
-            "& .cm-line:has(.cm-h2) > :first-child": {
-              marginLeft: "-2.2rem",
-            },
-            "& .cm-line:has(.cm-h) > :first-child": {
-              marginLeft: "-2.8rem",
-            },
-          }),
-          syntaxHighlighting(markdownHighlightStyle),
-        ]}
+        extensions={extensions}
       />
     );
   }, [document, proposedDiff, debouncedHandleEditorChange]);

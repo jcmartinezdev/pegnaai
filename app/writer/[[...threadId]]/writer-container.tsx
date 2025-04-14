@@ -3,12 +3,14 @@
 import AppHeader from "@/components/app-header";
 import { SyncDataContext } from "@/components/sync-data-provider";
 import { useThreadRouter } from "@/components/thread-router";
-import processPegnaAIStream from "@/lib/ai/ask-chat";
-import { AskModel } from "@/lib/ai/types";
+import { WriterModel } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
 import dynamic from "next/dynamic";
 import { useCallback, useContext, useEffect, useState } from "react";
+import WriterNewDocumentForm from "./writer-new-document-form";
+import WriterUpdateDocumentForm from "./writer-update-document-form";
+import { askPegnaAIToGenerateText } from "@/lib/ai/ask-chat";
 const WriterEditor = dynamic(() => import("./writer-editor"), { ssr: false });
 
 export default function WriterContainer() {
@@ -20,8 +22,14 @@ export default function WriterContainer() {
 
   const onEditorChange = useCallback(
     async (content?: string) => {
+      const thread = await chatDB.getThread(threadId);
+      const diff =
+        thread?.documentProposedDiff === content
+          ? ""
+          : thread?.documentProposedDiff;
       await chatDB.threads.update(threadId, {
         document: content || "",
+        documentProposedDiff: diff,
         updatedAt: new Date(),
         synced: 0,
       });
@@ -29,9 +37,9 @@ export default function WriterContainer() {
     [threadId],
   );
 
-  async function onProcessPegnaAIStream(ask: AskModel) {
+  async function onGenerateText(ask: WriterModel) {
     setIsStreaming(true);
-    const response = await processPegnaAIStream(ask);
+    const response = await askPegnaAIToGenerateText(ask);
     setIsStreaming(false);
     // Sync after sending a message
     syncEngine?.start();
@@ -65,13 +73,27 @@ export default function WriterContainer() {
     <>
       <AppHeader thread={thread} />
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
-        <div className="overflow-y-auto">
-          <WriterEditor
-            document={thread?.document || ""}
-            proposedDiff={thread?.documentProposedDiff}
-            onChange={onEditorChange}
+        {threadId ? (
+          <>
+            <div className="overflow-y-auto pt-4 md:pt-8 pb-32">
+              <WriterEditor
+                isStreaming={isStreaming}
+                document={thread?.document || ""}
+                proposedDiff={thread?.documentProposedDiff}
+                onChange={onEditorChange}
+              />
+              <WriterUpdateDocumentForm
+                isStreaming={isStreaming}
+                onGenerateText={onGenerateText}
+              />
+            </div>
+          </>
+        ) : (
+          <WriterNewDocumentForm
+            isStreaming={isStreaming}
+            onGenerateText={onGenerateText}
           />
-        </div>
+        )}
       </div>
     </>
   );

@@ -4,7 +4,6 @@ import { chatDB } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
 import ChatForm from "./chat-form";
 import { useContext, useEffect, useState } from "react";
-import processPegnaAIStream from "@/lib/ai/ask-chat";
 import { AskModel } from "@/lib/ai/types";
 import ChatLimitBanner from "./chat-limit-banner";
 import ChatScrollContainer from "./chat-scroll-container";
@@ -14,6 +13,7 @@ import ChatContent from "./chat-content";
 import { SyncDataContext } from "@/components/sync-data-provider";
 import { useThreadRouter } from "@/components/thread-router";
 import AppHeader from "@/components/app-header";
+import { askPegnaAI } from "@/lib/ai/ask-chat";
 
 type ChatContainerProps = {
   userPlan?: string;
@@ -37,7 +37,7 @@ export default function ChatContainer({
 
   async function onProcessPegnaAIStream(ask: AskModel) {
     setIsStreaming(true);
-    const response = await processPegnaAIStream(ask);
+    const response = await askPegnaAI(ask);
     setIsStreaming(false);
     // Sync after sending a message
     syncEngine?.start();

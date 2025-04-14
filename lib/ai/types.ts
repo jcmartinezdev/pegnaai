@@ -34,7 +34,7 @@ export const traits = [
   },
 ];
 
-type ModelType = {
+export type ModelType = {
   name: string;
   description: string;
   allowSearch: boolean;
@@ -77,9 +77,41 @@ export const models: Record<LlmModel, ModelType> = {
   },
 };
 
+export type PegnaDocument = "Blog" | "YT" | "Letter" | "Resume" | "Other";
+
+type PegnaDocumentType = {
+  name: string;
+  description: string;
+};
+
+export const documentTypes: Record<PegnaDocument, PegnaDocumentType> = {
+  Blog: {
+    name: "Blog Post",
+    description: "A blog post or article.",
+  },
+  YT: {
+    name: "YouTube Video",
+    description: "A YouTube video script.",
+  },
+  Letter: {
+    name: "Letter",
+    description: "A letter or email.",
+  },
+  Resume: {
+    name: "Resume",
+    description: "A resume or CV.",
+  },
+  Other: {
+    name: "Other",
+    description: "Any other type of document.",
+  },
+};
+
 export type ModelParams = {
   reasoningEffort?: "low" | "high";
   includeSearch?: boolean;
+  documentType?: PegnaDocument;
+  topic?: string;
 };
 
 export type SearchMetadata = {
@@ -94,14 +126,18 @@ export type SearchMetadata = {
 export type ToolResponse = {
   toolCallId: string;
   toolName: string;
-  generateImage: {
+  generateImage?: {
     prompt?: string;
     url?: string;
     result?: string;
   };
+  updateDocument?: {
+    prompt?: string;
+    change?: string;
+  };
 };
 
-export type MessageKind = "text" | "image";
+export type MessageKind = "text" | "image" | "document";
 
 export type CustomMetadataType =
   | {
@@ -131,6 +167,17 @@ export type CustomMetadataType =
         prompt: string;
         url: string;
       };
+    }
+  | {
+      type: "document-clear";
+    }
+  | {
+      type: "document-delta";
+      delta: string;
+    }
+  | {
+      type: "document-diff-delta";
+      delta: string;
     };
 
 export interface FinishedStreamType {
@@ -154,4 +201,12 @@ export interface AskModel {
   model: LlmModel;
   modelParams: ModelParams;
   messages: AskMessagesModel[];
+}
+
+export interface WriterModel {
+  threadId: string;
+  generateTitle?: boolean;
+  prompt: string;
+  document: string;
+  modelParams: ModelParams;
 }

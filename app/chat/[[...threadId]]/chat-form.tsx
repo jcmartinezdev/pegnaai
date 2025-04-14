@@ -114,6 +114,7 @@ export default function ChatForm({
       modelParams: data.modelParams,
       messages: await chatDB.getAllMessagesForThread(saveThreadId),
       generateTitle: generateTitle ? true : undefined,
+      app: "chat",
     });
 
     reset({
