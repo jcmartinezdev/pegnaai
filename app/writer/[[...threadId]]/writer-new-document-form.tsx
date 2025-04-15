@@ -1,36 +1,62 @@
 import { useThreadRouter } from "@/components/thread-router";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+} from "@/components/ui/select";
 import { TextareaAutosize } from "@/components/ui/textarea";
-import { PegnaDocument, WriterModel } from "@/lib/ai/types";
+import { documentTypes, PegnaDocument, WriterModel } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
 import { Send } from "lucide-react";
 import { useForm, SubmitHandler } from "react-hook-form";
-
-type NewDocumentFormParams = {
-  prompt: string;
-  topic: string;
-  documentType: PegnaDocument;
-};
+import { z } from "zod";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type WriterNewDocumentFormProps = {
   isStreaming: boolean;
   onGenerateText: (ask: WriterModel) => Promise<void>;
 };
 
+const newDocumentFormSchema = z.object({
+  prompt: z.string().min(2, {
+    message: "Please enter a prompt",
+  }),
+  topic: z.string().optional(),
+  documentType: z.enum(
+    Object.keys(documentTypes) as [PegnaDocument, ...PegnaDocument[]],
+    {
+      message: "Please select a document type",
+    },
+  ),
+});
+
 export default function WriterNewDocumentForm({
   isStreaming,
   onGenerateText,
 }: WriterNewDocumentFormProps) {
   const { navigateToThread } = useThreadRouter();
-  const { register, handleSubmit, reset } = useForm<NewDocumentFormParams>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<z.infer<typeof newDocumentFormSchema>>({
+    resolver: zodResolver(newDocumentFormSchema),
     defaultValues: {
       prompt: "",
       topic: "",
-      documentType: "Other",
     },
   });
 
-  const onSubmit: SubmitHandler<NewDocumentFormParams> = async (data) => {
+  const onSubmit: SubmitHandler<z.infer<typeof newDocumentFormSchema>> = async (
+    data,
+  ) => {
     // First, let's create the thread
     const newThreadId = await chatDB.createThread({
       title: "New Document",
@@ -51,7 +77,10 @@ export default function WriterNewDocumentForm({
       role: "user",
       status: "done",
       model: "writer",
-      modelParams: {},
+      modelParams: {
+        documentType: data.documentType,
+        topic: data.topic,
+      },
       synced: 0,
     });
 
@@ -70,7 +99,21 @@ export default function WriterNewDocumentForm({
   };
 
   return (
-    <div className="flex h-full justify-center items-center">
+    <div className="flex flex-col h-full justify-center items-center px-4 gap-4">
+      {Object.keys(errors).length > 0 && (
+        <Alert variant="destructive" className="w-full max-w-4xl h-fit">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            <ul>
+              {Object.values(errors)
+                .filter((error) => error) // Filter out any potentially undefined messages
+                .map((error, index) => (
+                  <li key={index}>{error.message}</li>
+                ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
       <form
         className="w-full max-w-4xl h-fit bg-accent rounded-xl border-2 p-3 shadow-lg"
         onSubmit={handleSubmit(onSubmit)}
@@ -95,7 +138,7 @@ export default function WriterNewDocumentForm({
                 }
               }
             }}
-            {...register("prompt", { required: true })}
+            {...register("prompt")}
           />
           <Button
             type="submit"
@@ -105,6 +148,26 @@ export default function WriterNewDocumentForm({
           >
             <Send className="size-5 -ml-0.5 -mb-0.5" />
           </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <FormField
+            control={control}
+            name="documentType"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <SelectTrigger className="w-42">
+                  <SelectValue placeholder="Document Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.keys(documentTypes).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {documentTypes[key as PegnaDocument].name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       </form>
     </div>

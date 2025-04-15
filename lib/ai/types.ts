@@ -82,6 +82,7 @@ export type PegnaDocument = "Blog" | "YT" | "Letter" | "Resume" | "Other";
 type PegnaDocumentType = {
   name: string;
   description: string;
+  generationPrompt: string;
   repurposePrompt: string;
 };
 
@@ -89,26 +90,34 @@ export const documentTypes: Record<PegnaDocument, PegnaDocumentType> = {
   Blog: {
     name: "Blog Post",
     description: "A blog post or article.",
+    generationPrompt: "Ensure the text style is suitable for a blog post.",
     repurposePrompt: "Repurpos the text into a blog post or article format.",
   },
   YT: {
     name: "YouTube Video",
     description: "A YouTube video script.",
+    generationPrompt:
+      "Ensure the text style is suitable for a YouTube video script.",
     repurposePrompt: "Repurpose the text into a YouTube video script.",
   },
   Letter: {
     name: "Letter",
     description: "A letter or email.",
+    generationPrompt:
+      "Ensure the text style is suitable for a letter or email.",
     repurposePrompt: "Repurpose the text into a letter or email format.",
   },
   Resume: {
     name: "Resume",
     description: "A resume or CV.",
+    generationPrompt: "Ensure the text style is suitable for a resume or CV.",
     repurposePrompt: "Repurpose the text into a resume or CV format.",
   },
   Other: {
     name: "Other",
     description: "Any other type of document.",
+    generationPrompt:
+      "Ensure the text style is suitable for a general document.",
     repurposePrompt: "Repurpose the text into a general style format.",
   },
 };

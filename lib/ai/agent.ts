@@ -4,7 +4,7 @@ import { getAIExperienceSettings } from "@/db/queries";
 import { isFreePlan } from "../billing/account";
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
-import { ModelParams } from "./types";
+import { documentTypes, ModelParams } from "./types";
 
 /**
  * Build the system prompt for the AI
@@ -90,7 +90,7 @@ export async function generateThreadTitle(prompt: string) {
 }
 
 function buildWriterNewDocumentSystemPrompt(modelParams: ModelParams) {
-  return `You are Pegna AI Writer, an AI built in Germany, designed to work with long text documents like blog posts, articles, notes, etc.
+  return `You are Pegna AI Writer, an AI built in Germany, designed to generate long text documents like blog posts, articles, notes, etc.
 
 # Here are some rules to follow:
 
@@ -100,17 +100,17 @@ function buildWriterNewDocumentSystemPrompt(modelParams: ModelParams) {
 - Don't add any commentary or explanation to the text you generate, just the plain markdown text.
 
 # Steps:
-1. Read the document and the user instructions carefully.
-2. Identify text segments or keywords in the original document that need to be changed.
-3. Apply the user instructions to the identified segments or keywords.
-4. Ensure any changes made are consistent with the overall tone and style of the original document.
-5. Avoid making changes that break the flow or coherence of the document.
+1. Read the document and the user instructions carefully. The user instructions are given as a user prompt.
+2. ${documentTypes[modelParams.documentType || "Other"].generationPrompt}
+3. Identify a good content outline, thinking the title, subheadings if any, and the content of the document.
+4. Generate the content on each section, including an intro with the user's instructions.
+5. The flow of the document should be coherent and logical.
 6. Review the newly generated text for typos, and grammatical errors.
 7. Ensure the final output is in markdown format, and includes the original document with all its changes.
 
-# Examples:
-
-    `;
+# Output:
+- The output should be a markdown formatted text.
+`;
 }
 
 export async function buildWriterSystemPrompt(
@@ -118,7 +118,7 @@ export async function buildWriterSystemPrompt(
   modelParams: ModelParams,
   selectionRange: { from: number; to: number } | null = null,
 ) {
-  if (!document) {
+  if (!document || document.length < 0) {
     return buildWriterNewDocumentSystemPrompt(modelParams);
   }
 
