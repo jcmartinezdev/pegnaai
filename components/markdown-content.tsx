@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { lexer } from "marked";
 import Image from "next/image";
 import { memo, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
@@ -15,7 +16,9 @@ type MarkdownContentProps = {
   content: string;
 };
 
-function MarkdownContent({ content }: MarkdownContentProps) {
+const MarkdownBlock = memo(function MarkdownBlock({
+  content,
+}: MarkdownContentProps) {
   const { theme } = useTheme();
 
   const memoizedContent = useMemo(
@@ -108,6 +111,21 @@ function MarkdownContent({ content }: MarkdownContentProps) {
   );
 
   return memoizedContent;
+});
+
+function MarkdownContent({ content }: MarkdownContentProps) {
+  const memoizedTokens = useMemo(() => {
+    const tokens = lexer(content);
+    return (
+      <>
+        {tokens.map((token, index) => (
+          <MarkdownBlock key={index} content={token.raw} />
+        ))}
+      </>
+    );
+  }, [content]);
+
+  return memoizedTokens;
 }
 
 export default memo(MarkdownContent);
