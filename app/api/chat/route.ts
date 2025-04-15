@@ -3,12 +3,7 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { google, GoogleGenerativeAIProviderMetadata } from "@ai-sdk/google";
 import { createDataStreamResponse, streamText, Tool } from "ai";
 import { z } from "zod";
-import {
-  getCurrentUserUsageForUser,
-  getUser,
-  getUserLimits,
-  incrementUserUsageForUser,
-} from "@/db/queries";
+import { getUser } from "@/db/queries";
 import { auth0 } from "@/lib/auth0";
 import {
   AskMessagesModel,
@@ -17,13 +12,11 @@ import {
   ModelParams,
   models,
   SearchMetadata,
-} from "@/lib/chat/types";
+} from "@/lib/ai/types";
 import { isFreePlan } from "@/lib/billing/account";
-import { cookies } from "next/headers";
-import { buildSystemPrompt, generateThreadTitle } from "@/lib/chat/agent";
-import createGenerateImageTool from "@/lib/chat/tools/generateImage";
-
-const RATE_LIMIT_COOKIE = "pegna_rl";
+import { buildSystemPrompt, generateThreadTitle } from "@/lib/ai/agent";
+import createGenerateImageTool from "@/lib/ai/tools/generateImage";
+import { validateRateLimits } from "@/lib/billing/rate-limits";
 
 type ModelSelectorItem = {
   provider: "google" | "openai" | "anthropic";
@@ -53,6 +46,12 @@ const modelSettings: Record<LlmModel, Record<string, ModelSelectorItem>> = {
     _default: {
       provider: "anthropic",
       modelName: "claude-3-7-sonnet-20250219",
+    },
+  },
+  writer: {
+    _default: {
+      provider: "openai",
+      modelName: "gpt-4o",
     },
   },
 };
@@ -138,112 +137,34 @@ export async function POST(req: Request) {
   const { model, modelParams, messages, generateTitle } = data;
 
   const session = await auth0.getSession();
-  const [user, limits, usage] = await Promise.all([
-    getUser(session?.user.sub || "unknown"),
-    getUserLimits(session?.user.sub),
-    getCurrentUserUsageForUser(session?.user.sub || "unknown"),
-  ]);
+  const user = await getUser(session?.user.sub || "unknown");
 
   const currentModel = models[model];
 
-  const pendingPromises: Promise<unknown>[] = [];
-
   let remainingMessages = 0;
   let remainingPremiumMessages = 0;
-
-  // Validate if the user has access to the model
-  // And to advanced features such as search, or high reasoning
-  let hasAccess = false;
-  if (
-    currentModel.requiresPro ||
-    modelParams?.includeSearch ||
-    modelParams?.reasoningEffort === "high"
-  ) {
-    if (session) {
-      if (!isFreePlan(user?.planName)) {
-        hasAccess = true;
-      }
-    }
-  } else {
-    hasAccess = true;
-  }
-
-  if (!hasAccess) {
+  try {
+    const result = await validateRateLimits(currentModel, modelParams);
+    remainingMessages = result.remainingMessages;
+    remainingPremiumMessages = result.remainingPremiumMessages;
+  } catch (error) {
     return new Response(
       JSON.stringify({
-        message: "You need a pro account to access this model.",
+        message: error,
         type: "rate_limit",
       }),
       { status: 429 },
     );
   }
 
-  // Validate rate limits
-  if (session) {
-    // Check for rate limits
-    if (currentModel.isPremium) {
-      if (usage.premiumMessagesCount >= limits.premiumMessagesLimit) {
-        return new Response(
-          JSON.stringify({
-            message: "You have reached your premium message limit.",
-            type: "rate_limit",
-          }),
-          { status: 429 },
-        );
-      }
-    } else {
-      if (usage.messagesCount >= limits.messagesLimit) {
-        return new Response(
-          JSON.stringify({
-            message: "You have reached your message limit",
-            type: "rate_limit",
-          }),
-          { status: 429 },
-        );
-      }
-    }
-
-    pendingPromises.push(
-      incrementUserUsageForUser(session.user.sub, currentModel.isPremium),
-    );
-
-    remainingMessages =
-      limits.messagesLimit -
-      usage.messagesCount -
-      (currentModel.isPremium ? 0 : 1);
-    remainingPremiumMessages =
-      limits.premiumMessagesLimit -
-      usage.premiumMessagesCount -
-      (currentModel.isPremium ? 1 : 0);
-  } else {
-    const cookieStore = await cookies();
-    if (cookieStore.has(RATE_LIMIT_COOKIE)) {
-      remainingMessages = Number(cookieStore.get(RATE_LIMIT_COOKIE)?.value);
-
-      if (remainingMessages <= 0) {
-        return new Response(
-          JSON.stringify({
-            message: "You have reached your message limit",
-            type: "rate_limit",
-          }),
-          { status: 429 },
-        );
-      }
-      remainingMessages--;
-    } else {
-      remainingMessages = 9;
-    }
-
-    // Save the new value
-    cookieStore.set(RATE_LIMIT_COOKIE, String(remainingMessages));
-  }
-
-  //FIXME: can I cache this?
   const systemPrompt = await buildSystemPrompt(
     session?.user.sub,
     session?.user.name,
     user?.planName,
   );
+
+  /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+  const pendingPromises: Promise<any>[] = [];
 
   return createDataStreamResponse({
     execute: (dataStream) => {

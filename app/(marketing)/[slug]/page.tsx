@@ -17,6 +17,7 @@ export async function generateStaticParams() {
         slug: file.replace(/\.mdx$/, ""),
       }));
   } catch (error) {
+    console.error("Error reading content directory:", error);
     return [];
   }
 }
@@ -55,7 +56,6 @@ export default async function MarketingPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  console.log("Generating page for slug:", slug);
   const filePath = path.join(
     process.cwd(),
     "content/marketing/",

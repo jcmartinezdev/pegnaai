@@ -15,6 +15,20 @@
       "when": 1744190957959,
       "tag": "0001_moaning_zombie",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1744282934593,
+      "tag": "0002_quiet_vivisector",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1744288385268,
+      "tag": "0003_eminent_orphan",
+      "breakpoints": true
     }
   ]
 }

@@ -4,9 +4,10 @@ import { chatDB } from "../localDb";
 import {
   LlmModel,
   ModelParams,
+  PegnaAppType,
   SearchMetadata,
   ToolResponse,
-} from "../chat/types";
+} from "../ai/types";
 import { shouldSyncData, syncData } from "./actions";
 
 export const LAST_SYNC_DATE_STORAGE_KEY = "lastSyncDate";
@@ -35,8 +36,12 @@ export async function localSyncData(
 
   const toServerThreads = threads.map((thread) => ({
     ...thread,
+    document: thread.document || "",
+    documentProposedDiff: thread.documentProposedDiff || "",
+    repurposeDocument: undefined,
     localId: thread.id,
     userId,
+    app: thread.app || "chat",
   }));
 
   const toServerMessages = messages.map((message) => ({
@@ -103,10 +108,12 @@ export async function localSyncData(
     serverThreads.map((thread) => ({
       ...thread,
       id: thread.localId,
+      document: thread.document || undefined,
       model: thread.model as LlmModel,
       modelParams: thread.modelParams as ModelParams,
       status: thread.status as "active" | "deleted",
       synced: 1,
+      app: thread.app as PegnaAppType,
     })),
   );
   await chatDB.updateMessages(

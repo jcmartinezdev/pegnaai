@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import HeroSection from "./hero-section";
 import ProductCard from "./product-card";
-import { LlmModel, models } from "@/lib/chat/types";
+import { LlmModel, models } from "@/lib/ai/types";
 import ModelIcon from "@/components/model-icon";
 
 export default function Home() {

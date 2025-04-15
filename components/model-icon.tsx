@@ -1,6 +1,6 @@
-import { LlmModel } from "@/lib/chat/types";
+import { LlmModel } from "@/lib/ai/types";
 import { cn } from "@/lib/utils";
-import { Code, LucideProps, MessageCircle } from "lucide-react";
+import { Code, LucideProps, MessageCircle, Pen } from "lucide-react";
 
 type ModelIconProps = LucideProps & {
   model: LlmModel;
@@ -21,6 +21,8 @@ export default function ModelIcon({
       );
     case "code":
       return <Code className={cn("text-pink-500", className)} {...props} />;
+    case "writer":
+      return <Pen className={cn("text-blue-500", className)} {...props} />;
     default:
       return undefined;
   }

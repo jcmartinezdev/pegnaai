@@ -17,7 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Settings, Sparkles, Brain, Save } from "lucide-react";
 import { userAIExperienceTable } from "@/db/schema";
 import { useForm } from "react-hook-form";
-import { traits } from "@/lib/chat/types";
+import { traits } from "@/lib/ai/types";
 import { useMutation } from "@tanstack/react-query";
 import { saveAIExperienceSettings } from "./actions";
 import { toast } from "sonner";
