@@ -116,9 +116,20 @@ function buildWriterNewDocumentSystemPrompt(modelParams: ModelParams) {
 export async function buildWriterSystemPrompt(
   document: string,
   modelParams: ModelParams,
+  selectionRange: { from: number; to: number } | null = null,
 ) {
   if (!document) {
     return buildWriterNewDocumentSystemPrompt(modelParams);
+  }
+
+  let processDocument = document;
+  if (selectionRange) {
+    processDocument =
+      document.slice(0, selectionRange.from) +
+      "<<<HIGHLIGHT>>>" +
+      document.slice(selectionRange.from, selectionRange.to) +
+      "<<<ENDHIGHLIGHT>>>" +
+      document.slice(selectionRange.to);
   }
 
   let systemPrompt = `You are Pegna AI Writer, an AI built in Germany, designed to work with long text documents like blog posts, articles, notes, etc.
@@ -132,12 +143,17 @@ export async function buildWriterSystemPrompt(
 
 # Steps:
 1. Read the document and the user instructions carefully.
-2. Identify text segments or keywords in the original document that need to be changed.
-3. Apply the user instructions to the identified segments or keywords.
-4. Ensure any changes made are consistent with the overall tone and style of the original document.
-5. Avoid making changes that break the flow or coherence of the document.
-6. Review the newly generated text for typos, and grammatical errors.
-7. Ensure the final output is in markdown format, and includes the original document with all its changes.
+2. ${selectionRange ? "Analyze the text between `<<<HIGHLIGHT>>>` and `<<<ENDHIGHLIGHT>>>` within the **Original Document**." : "Identify text segments or keywords in the original document that need to be changed."}
+3. If the user specified a specific text to change, just focus on that, and use the original document only as context
+4. Apply the user instructions to the identified segments or keywords.
+5. Ensure any changes made are consistent with the overall tone and style of the orignal document.
+6. Avoid making changes that break the flow or coherence of the document.
+7. Review the newly generated text for typos, and grammatical errors.
+8. Ensure the final output is in markdown format, and includes the original document with all its changes.
+
+# Output
+- The output should be a markdown formatted text.
+- ${selectionRange ? "Return *only* the modified text block that should replace the original highlighted section. Do NOT return the full document. Do NOT include the highlight markers in the output." : "The output should be the final document, with all the changes made."}
 
 # Examples:
 
@@ -151,8 +167,8 @@ export async function buildWriterSystemPrompt(
 - User instructions: "Add a new intro paragraph."
 - Final output: "Today was a beautiful day, perfect for a stroll in the park.\n\nThe sun was shining, and I was walking in the park. It was nice. I sat on a bench and watched the kids play."
 
-# Original document:
-${document}
+Original document:
+${processDocument}
 `;
   return systemPrompt;
 }

@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { Statistics } from "@uiw/react-codemirror";
 import CodeMirrorMerge from "react-codemirror-merge";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
@@ -17,6 +17,7 @@ type WriterEditorProps = {
   proposedDiff?: string;
   onChange: (value?: string) => void;
   onRejectProposal: () => void;
+  onStatsChange: (stats: Statistics) => void;
 };
 
 const markdownHighlightStyle = HighlightStyle.define([
@@ -133,6 +134,7 @@ function WriterEditor({
   proposedDiff,
   onChange,
   onRejectProposal,
+  onStatsChange,
 }: WriterEditorProps) {
   const debouncedHandleEditorChange = useDebouncedCallback(onChange, 500);
 
@@ -214,6 +216,7 @@ function WriterEditor({
         readOnly={isStreaming}
         height="100%"
         extensions={extensions}
+        onStatistics={onStatsChange}
       />
     );
   }, [

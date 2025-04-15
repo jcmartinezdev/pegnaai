@@ -209,4 +209,8 @@ export interface WriterModel {
   prompt: string;
   document: string;
   modelParams: ModelParams;
+  selectionRange?: {
+    from: number;
+    to: number;
+  } | null;
 }

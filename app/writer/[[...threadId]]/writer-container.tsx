@@ -11,14 +11,29 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import WriterNewDocumentForm from "./writer-new-document-form";
 import WriterUpdateDocumentForm from "./writer-update-document-form";
 import { askPegnaAIToGenerateText } from "@/lib/ai/ask-chat";
+import { SelectionRange, Statistics } from "@uiw/react-codemirror";
 const WriterEditor = dynamic(() => import("./writer-editor"), { ssr: false });
 
 export default function WriterContainer() {
   const { threadId, navigateToThread } = useThreadRouter();
   const [remainingLimits, setRemainingLimits] = useState<number | undefined>();
+  const [selectionRange, setSelectionRange] = useState<SelectionRange | null>(
+    null,
+  );
   const [isStreaming, setIsStreaming] = useState(false);
   const [document, setDocument] = useState<string | undefined>();
   const syncEngine = useContext(SyncDataContext);
+
+  const onEditorStatsChange = useCallback(
+    (data: Statistics) => {
+      if (data.selectionCode.length > 0) {
+        setSelectionRange(data.selectionAsSingle);
+      } else {
+        setSelectionRange(null);
+      }
+    },
+    [setSelectionRange],
+  );
 
   const onEditorChange = useCallback(
     async (content?: string) => {
@@ -90,8 +105,10 @@ export default function WriterContainer() {
                 proposedDiff={thread?.documentProposedDiff}
                 onChange={onEditorChange}
                 onRejectProposal={onRejectProposal}
+                onStatsChange={onEditorStatsChange}
               />
               <WriterUpdateDocumentForm
+                selectionRange={selectionRange}
                 isStreaming={isStreaming}
                 onGenerateText={onGenerateText}
               />

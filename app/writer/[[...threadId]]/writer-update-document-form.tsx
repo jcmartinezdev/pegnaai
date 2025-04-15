@@ -1,8 +1,10 @@
 import { useThreadRouter } from "@/components/thread-router";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TextareaAutosize } from "@/components/ui/textarea";
 import { WriterModel } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
+import { SelectionRange } from "@uiw/react-codemirror";
 import { Send } from "lucide-react";
 import { useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -13,12 +15,14 @@ type NewDocumentFormParams = {
 
 type WriterUpdateDocumentFormProps = {
   isStreaming: boolean;
+  selectionRange: SelectionRange | null;
   onGenerateText: (ask: WriterModel) => Promise<void>;
 };
 
 export default function WriterUpdateDocumentForm({
   isStreaming,
   onGenerateText,
+  selectionRange,
 }: WriterUpdateDocumentFormProps) {
   const { threadId } = useThreadRouter();
   const { register, handleSubmit, reset, setFocus } =
@@ -57,6 +61,12 @@ export default function WriterUpdateDocumentForm({
         documentType: thread?.modelParams.documentType,
         topic: thread?.modelParams.topic,
       },
+      selectionRange: selectionRange
+        ? {
+            from: selectionRange.from,
+            to: selectionRange.to,
+          }
+        : null,
     });
 
     reset();
@@ -97,6 +107,15 @@ export default function WriterUpdateDocumentForm({
           >
             <Send className="size-5 -ml-0.5 -mb-0.5" />
           </Button>
+        </div>
+        <div className="flex items-center">
+          <div className="flex gap-2">
+            {selectionRange && (
+              <Badge>
+                Selection: &#123;{selectionRange.from}:{selectionRange.to}&#125;
+              </Badge>
+            )}
+          </div>
         </div>
       </form>
     </div>
