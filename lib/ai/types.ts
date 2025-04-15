@@ -82,28 +82,34 @@ export type PegnaDocument = "Blog" | "YT" | "Letter" | "Resume" | "Other";
 type PegnaDocumentType = {
   name: string;
   description: string;
+  repurposePrompt: string;
 };
 
 export const documentTypes: Record<PegnaDocument, PegnaDocumentType> = {
   Blog: {
     name: "Blog Post",
     description: "A blog post or article.",
+    repurposePrompt: "Repurpos the text into a blog post or article format.",
   },
   YT: {
     name: "YouTube Video",
     description: "A YouTube video script.",
+    repurposePrompt: "Repurpose the text into a YouTube video script.",
   },
   Letter: {
     name: "Letter",
     description: "A letter or email.",
+    repurposePrompt: "Repurpose the text into a letter or email format.",
   },
   Resume: {
     name: "Resume",
     description: "A resume or CV.",
+    repurposePrompt: "Repurpose the text into a resume or CV format.",
   },
   Other: {
     name: "Other",
     description: "Any other type of document.",
+    repurposePrompt: "Repurpose the text into a general style format.",
   },
 };
 
@@ -176,6 +182,10 @@ export type CustomMetadataType =
       delta: string;
     }
   | {
+      type: "document-rep-delta";
+      delta: string;
+    }
+  | {
       type: "document-diff-delta";
       delta: string;
     };
@@ -213,4 +223,5 @@ export interface WriterModel {
     from: number;
     to: number;
   } | null;
+  repurpose?: boolean;
 }

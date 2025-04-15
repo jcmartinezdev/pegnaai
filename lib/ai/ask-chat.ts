@@ -229,6 +229,7 @@ async function processPegnaAIStream(
                   case "document-clear":
                     await chatDB.threads.update(threadId, {
                       documentProposedDiff: "",
+                      repurposeDocument: "",
                       synced: 0,
                       updatedAt: new Date(),
                     });
@@ -247,6 +248,16 @@ async function processPegnaAIStream(
                       documentProposedDiff:
                         ((await chatDB.threads.get(threadId))
                           ?.documentProposedDiff || "") +
+                        data.delta.replace(/^"|"$/g, ""),
+                      synced: 0,
+                      updatedAt: new Date(),
+                    });
+                    break;
+                  case "document-rep-delta":
+                    await chatDB.threads.update(threadId, {
+                      repurposeDocument:
+                        ((await chatDB.threads.get(threadId))
+                          ?.repurposeDocument || "") +
                         data.delta.replace(/^"|"$/g, ""),
                       synced: 0,
                       updatedAt: new Date(),

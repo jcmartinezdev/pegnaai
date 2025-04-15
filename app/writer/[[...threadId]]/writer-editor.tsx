@@ -15,9 +15,10 @@ type WriterEditorProps = {
   isStreaming?: boolean;
   document: string;
   proposedDiff?: string;
+  readOnly?: boolean;
   onChange: (value?: string) => void;
-  onRejectProposal: () => void;
-  onStatsChange: (stats: Statistics) => void;
+  onRejectProposal?: () => void;
+  onStatsChange?: (stats: Statistics) => void;
 };
 
 const markdownHighlightStyle = HighlightStyle.define([
@@ -131,6 +132,7 @@ const extensions = [
 function WriterEditor({
   isStreaming,
   document,
+  readOnly,
   proposedDiff,
   onChange,
   onRejectProposal,
@@ -149,9 +151,7 @@ function WriterEditor({
                 <Button
                   variant="destructive"
                   disabled={isStreaming}
-                  onClick={() => {
-                    onRejectProposal();
-                  }}
+                  onClick={onRejectProposal}
                 >
                   Discard Proposal
                 </Button>
@@ -213,7 +213,7 @@ function WriterEditor({
           foldGutter: false,
           highlightSelectionMatches: false,
         }}
-        readOnly={isStreaming}
+        readOnly={isStreaming || readOnly}
         height="100%"
         extensions={extensions}
         onStatistics={onStatsChange}

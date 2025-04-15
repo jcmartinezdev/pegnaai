@@ -17,6 +17,7 @@ export interface ThreadModel {
   modelParams: ModelParams;
   document?: string;
   documentProposedDiff?: string;
+  repurposeDocument?: string;
   pinned: boolean;
   lastMessageAt: Date;
   createdAt: Date;

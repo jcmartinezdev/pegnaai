@@ -1,4 +1,4 @@
-import { LlmModel } from "@/lib/chat/types";
+import { LlmModel } from "@/lib/ai/types";
 import { ThreadModel } from "@/lib/localDb";
 import { faker } from "@faker-js/faker";
 

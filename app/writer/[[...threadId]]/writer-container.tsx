@@ -3,8 +3,8 @@
 import AppHeader from "@/components/app-header";
 import { SyncDataContext } from "@/components/sync-data-provider";
 import { useThreadRouter } from "@/components/thread-router";
-import { WriterModel } from "@/lib/ai/types";
-import { chatDB } from "@/lib/localDb";
+import { documentTypes, PegnaDocument, WriterModel } from "@/lib/ai/types";
+import { chatDB, ThreadModel } from "@/lib/localDb";
 import { useLiveQuery } from "dexie-react-hooks";
 import dynamic from "next/dynamic";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import WriterNewDocumentForm from "./writer-new-document-form";
 import WriterUpdateDocumentForm from "./writer-update-document-form";
 import { askPegnaAIToGenerateText } from "@/lib/ai/ask-chat";
 import { SelectionRange, Statistics } from "@uiw/react-codemirror";
+import { Button } from "@/components/ui/button";
 const WriterEditor = dynamic(() => import("./writer-editor"), { ssr: false });
 
 export default function WriterContainer() {
@@ -21,6 +22,8 @@ export default function WriterContainer() {
     null,
   );
   const [isStreaming, setIsStreaming] = useState(false);
+  const [repurposeDocumentType, setRepurposeDocumentType] =
+    useState<PegnaDocument>("Other");
   const [document, setDocument] = useState<string | undefined>();
   const syncEngine = useContext(SyncDataContext);
 
@@ -60,8 +63,64 @@ export default function WriterContainer() {
     });
   }, [threadId]);
 
+  const onRejectRepurpose = useCallback(async () => {
+    await chatDB.threads.update(threadId, {
+      repurposeDocument: "",
+      updatedAt: new Date(),
+      synced: 0,
+    });
+  }, [threadId]);
+
+  const onAcceptRepurpose = useCallback(
+    async (thread: ThreadModel) => {
+      onRejectRepurpose();
+      const newThreadId = await chatDB.createThread({
+        title: `${thread?.title}: ${documentTypes[repurposeDocumentType].name}`,
+        document: thread?.repurposeDocument || "",
+        model: "writer",
+        modelParams: {
+          documentType: repurposeDocumentType,
+          topic: "",
+        },
+        app: "writer",
+      });
+
+      await chatDB.addMessage({
+        threadId: newThreadId,
+        content: "Repurpose document",
+        role: "user",
+        status: "done",
+        model: "writer",
+        modelParams: {
+          documentType: repurposeDocumentType,
+          topic: "",
+        },
+        synced: 0,
+      });
+
+      await chatDB.addMessage({
+        threadId: newThreadId,
+        content: thread?.repurposeDocument || "",
+        role: "assistant",
+        status: "done",
+        model: "writer",
+        modelParams: {
+          documentType: repurposeDocumentType,
+          topic: "",
+        },
+        synced: 0,
+      });
+
+      navigateToThread(newThreadId);
+    },
+    [threadId, repurposeDocumentType],
+  );
+
   async function onGenerateText(ask: WriterModel) {
     setIsStreaming(true);
+    if (ask.repurpose && ask.modelParams.documentType) {
+      setRepurposeDocumentType(ask.modelParams.documentType);
+    }
     const response = await askPegnaAIToGenerateText(ask);
     setIsStreaming(false);
     // Sync after sending a message
@@ -99,19 +158,55 @@ export default function WriterContainer() {
         {threadId ? (
           <>
             <div className="overflow-y-auto pt-4 md:pt-8 pb-32">
-              <WriterEditor
-                isStreaming={isStreaming}
-                document={thread?.document || ""}
-                proposedDiff={thread?.documentProposedDiff}
-                onChange={onEditorChange}
-                onRejectProposal={onRejectProposal}
-                onStatsChange={onEditorStatsChange}
-              />
-              <WriterUpdateDocumentForm
-                selectionRange={selectionRange}
-                isStreaming={isStreaming}
-                onGenerateText={onGenerateText}
-              />
+              {thread?.repurposeDocument ? (
+                <div className="pt-12">
+                  <WriterEditor
+                    isStreaming={isStreaming}
+                    document={thread?.repurposeDocument || ""}
+                    onChange={() => {}}
+                    readOnly={true}
+                  />
+                  <div className="absolute top-0 w-full">
+                    <div className="flex items-center justify-between p-2 border bg-muted">
+                      <span>
+                        Repurposing document to:&nbsp;
+                        {documentTypes[repurposeDocumentType].name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="destructive"
+                          disabled={isStreaming}
+                          onClick={onRejectRepurpose}
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          disabled={isStreaming}
+                          onClick={() => onAcceptRepurpose(thread)}
+                        >
+                          Save as new document
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <WriterEditor
+                    isStreaming={isStreaming}
+                    document={thread?.document || ""}
+                    proposedDiff={thread?.documentProposedDiff}
+                    onChange={onEditorChange}
+                    onRejectProposal={onRejectProposal}
+                    onStatsChange={onEditorStatsChange}
+                  />
+                  <WriterUpdateDocumentForm
+                    selectionRange={selectionRange}
+                    isStreaming={isStreaming}
+                    onGenerateText={onGenerateText}
+                  />
+                </>
+              )}
             </div>
           </>
         ) : (

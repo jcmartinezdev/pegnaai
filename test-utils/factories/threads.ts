@@ -1,5 +1,5 @@
 import { threadsTable } from "@/db/schema";
-import { LlmModel } from "@/lib/chat/types";
+import { LlmModel } from "@/lib/ai/types";
 import { faker } from "@faker-js/faker";
 
 let uniqueIdCounter = 1;
@@ -12,6 +12,7 @@ const createDefaultDbThreadData = (): typeof threadsTable.$inferSelect => {
     localId: `local-${uniqueIdCounter}`,
     title: faker.lorem.sentence(),
     model: "chat" as LlmModel,
+    document: null,
     modelParams: {},
     pinned: false,
     lastMessageAt: new Date(),

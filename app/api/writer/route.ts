@@ -30,6 +30,7 @@ const askModelSchema = z.object({
     })
     .optional()
     .nullable(),
+  repurpose: z.boolean().optional(),
 }) satisfies z.ZodType<WriterModel>;
 
 export async function POST(req: Request) {
@@ -42,7 +43,14 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const { generateTitle, prompt, document, modelParams, selectionRange } = data;
+  const {
+    generateTitle,
+    prompt,
+    document,
+    modelParams,
+    selectionRange,
+    repurpose,
+  } = data;
 
   let remainingMessages = 0;
   let remainingPremiumMessages = 0;
@@ -102,7 +110,7 @@ export async function POST(req: Request) {
         });
       }
 
-      const { fullStream } = streamText({
+      const result = streamText({
         model: google("gemini-2.0-flash"),
         system: systemPrompt,
         prompt: prompt,
@@ -119,19 +127,32 @@ export async function POST(req: Request) {
         },
       });
 
-      for await (const delta of fullStream) {
+      for await (const delta of result.fullStream) {
         const { type } = delta;
 
         if (type === "text-delta") {
           const { textDelta } = delta;
 
-          dataStream.writeData({
-            type:
-              document.length === 0 ? "document-delta" : "document-diff-delta",
-            delta: textDelta,
-          });
+          if (repurpose) {
+            dataStream.writeData({
+              type: "document-rep-delta",
+              delta: textDelta,
+            });
+          } else {
+            dataStream.writeData({
+              type:
+                document.length === 0
+                  ? "document-delta"
+                  : "document-diff-delta",
+              delta: textDelta,
+            });
+          }
         }
       }
+
+      result.mergeIntoDataStream(dataStream, {
+        sendReasoning: true,
+      });
     },
     onError: (error) => {
       console.log("Error", error);
