@@ -1,4 +1,4 @@
-import { LlmModel } from "@/lib/chat/types";
+import { LlmModel } from "@/lib/ai/types";
 import { cn } from "@/lib/utils";
 import { Code, LucideProps, MessageCircle, Pen } from "lucide-react";
 

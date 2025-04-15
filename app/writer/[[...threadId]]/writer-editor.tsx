@@ -220,6 +220,8 @@ function WriterEditor({
       />
     );
   }, [
+    onStatsChange,
+    readOnly,
     document,
     proposedDiff,
     debouncedHandleEditorChange,

@@ -163,6 +163,7 @@ export async function POST(req: Request) {
     user?.planName,
   );
 
+  /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
   const pendingPromises: Promise<any>[] = [];
 
   return createDataStreamResponse({

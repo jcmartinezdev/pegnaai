@@ -132,7 +132,7 @@ export async function buildWriterSystemPrompt(
       document.slice(selectionRange.to);
   }
 
-  let systemPrompt = `You are Pegna AI Writer, an AI built in Germany, designed to work with long text documents like blog posts, articles, notes, etc.
+  const systemPrompt = `You are Pegna AI Writer, an AI built in Germany, designed to work with long text documents like blog posts, articles, notes, etc.
 
 # Here are some rules to follow:
 

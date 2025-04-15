@@ -108,7 +108,7 @@ export default function WriterUpdateDocumentForm({
   }
 
   return (
-    <div className="absolute bottom-0 w-full px-4 md:px-0">
+    <div className="absolute bottom-0 w-full px-4 sm:px-0">
       <form
         className="w-full mx-auto max-w-4xl bg-accent rounded-t-xl border-2 border-b-0 p-3 shadow-lg"
         onSubmit={handleSubmit(onSubmit)}
@@ -143,98 +143,98 @@ export default function WriterUpdateDocumentForm({
             <Send className="size-5 -ml-0.5 -mb-0.5" />
           </Button>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1"
+            onClick={() => generateText("Check and fix grammar and spelling.")}
+          >
+            <Wand2 className="h-4 w-4" />
+            <span>Grammar Check</span>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Languages className="h-4 w-4" />
+                <span>Translate</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuGroup>
+                {languages.map((language) => (
+                  <DropdownMenuItem
+                    key={language}
+                    onClick={() => generateText(`Translate to ${language}`)}
+                  >
+                    <span>{language}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Megaphone className="h-4 w-4" />
+                <span>Change Tone</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuGroup>
+                {tones.map((tone) => (
+                  <DropdownMenuItem
+                    key={tone}
+                    onClick={() =>
+                      generateText(
+                        `Change the tone of the text to be more ${tone}`,
+                      )
+                    }
+                  >
+                    <span>{tone}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8 gap-1">
+                <Share2 className="h-4 w-4" />
+                <span>Repurpose</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuGroup>
+                {Object.keys(documentTypes).map((documentType) => (
+                  <DropdownMenuItem
+                    key={documentType}
+                    onClick={() =>
+                      generateText(
+                        documentTypes[documentType as PegnaDocument]
+                          .repurposePrompt,
+                        documentType as PegnaDocument,
+                      )
+                    }
+                  >
+                    <span>
+                      {documentTypes[documentType as PegnaDocument].name}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {selectionRange && (
+            <Badge>
+              Selection: &#123;{selectionRange.from}:{selectionRange.to}&#125;
+            </Badge>
+          )}
+        </div>
       </form>
-      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1"
-          onClick={() => generateText("Check and fix grammar and spelling.")}
-        >
-          <Wand2 className="h-4 w-4" />
-          <span>Grammar Check</span>
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1">
-              <Languages className="h-4 w-4" />
-              <span>Translate</span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuGroup>
-              {languages.map((language) => (
-                <DropdownMenuItem
-                  key={language}
-                  onClick={() => generateText(`Translate to ${language}`)}
-                >
-                  <span>{language}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1">
-              <Megaphone className="h-4 w-4" />
-              <span>Change Tone</span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuGroup>
-              {tones.map((tone) => (
-                <DropdownMenuItem
-                  key={tone}
-                  onClick={() =>
-                    generateText(
-                      `Change the tone of the text to be more ${tone}`,
-                    )
-                  }
-                >
-                  <span>{tone}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1">
-              <Share2 className="h-4 w-4" />
-              <span>Repurpose</span>
-              <ChevronDown className="h-3 w-3 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuGroup>
-              {Object.keys(documentTypes).map((documentType) => (
-                <DropdownMenuItem
-                  key={documentType}
-                  onClick={() =>
-                    generateText(
-                      documentTypes[documentType as PegnaDocument]
-                        .repurposePrompt,
-                      documentType as PegnaDocument,
-                    )
-                  }
-                >
-                  <span>
-                    {documentTypes[documentType as PegnaDocument].name}
-                  </span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {selectionRange && (
-          <Badge>
-            Selection: &#123;{selectionRange.from}:{selectionRange.to}&#125;
-          </Badge>
-        )}
-      </div>
     </div>
   );
 }

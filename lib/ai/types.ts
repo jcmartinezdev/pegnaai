@@ -78,8 +78,8 @@ export const models: Record<LlmModel, ModelType> = {
     description: "Optimized for writing and creative tasks.",
     allowSearch: false,
     allowReasoning: false,
-    requiresPro: true,
-    isPremium: true,
+    requiresPro: false,
+    isPremium: false,
     allowInChat: false,
   },
 };

@@ -54,7 +54,7 @@ export function ModelPicker({
           />
         )}
         {Object.entries(models)
-          .filter(([_key, model]) => model.allowInChat)
+          .filter(([, model]) => model.allowInChat)
           .map(([key, model]) => (
             <DropdownMenuItem
               key={key}

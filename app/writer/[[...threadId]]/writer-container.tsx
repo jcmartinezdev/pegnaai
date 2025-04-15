@@ -13,6 +13,7 @@ import WriterUpdateDocumentForm from "./writer-update-document-form";
 import { askPegnaAIToGenerateText } from "@/lib/ai/ask-chat";
 import { SelectionRange, Statistics } from "@uiw/react-codemirror";
 import { Button } from "@/components/ui/button";
+import ChatLimitBanner from "@/app/chat/[[...threadId]]/chat-limit-banner";
 const WriterEditor = dynamic(() => import("./writer-editor"), { ssr: false });
 
 export default function WriterContainer() {
@@ -113,7 +114,7 @@ export default function WriterContainer() {
 
       navigateToThread(newThreadId);
     },
-    [threadId, repurposeDocumentType],
+    [repurposeDocumentType, navigateToThread, onRejectRepurpose],
   );
 
   async function onGenerateText(ask: WriterModel) {
@@ -149,7 +150,7 @@ export default function WriterContainer() {
     if (!document) {
       setDocument(thread?.document || "");
     }
-  }, [thread?.document]);
+  }, [thread?.document, setDocument, document]);
 
   return (
     <>
@@ -157,7 +158,7 @@ export default function WriterContainer() {
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
         {threadId ? (
           <>
-            <div className="overflow-y-auto pt-4 md:pt-8 pb-32">
+            <div className="overflow-y-auto pt-4 md:pt-8 pb-48 md:pb-32">
               {thread?.repurposeDocument ? (
                 <div className="pt-12">
                   <WriterEditor
@@ -192,6 +193,20 @@ export default function WriterContainer() {
                 </div>
               ) : (
                 <>
+                  {remainingLimits === 0 && (
+                    <ChatLimitBanner
+                      isLoggedIn={true}
+                      message="You've reached the message limit."
+                    />
+                  )}
+                  {remainingLimits !== undefined &&
+                    remainingLimits <= 10 &&
+                    remainingLimits > 0 && (
+                      <ChatLimitBanner
+                        isLoggedIn={true}
+                        message={`You've ${remainingLimits} messages left.`}
+                      />
+                    )}
                   <WriterEditor
                     isStreaming={isStreaming}
                     document={thread?.document || ""}

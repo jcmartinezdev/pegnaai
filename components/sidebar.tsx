@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/localDb";
 import {
@@ -73,7 +73,7 @@ export default function AppSidebar({ user }: AppSidebarProps) {
               className="flex items-center justify-start w-full gap-x-4"
               asChild
             >
-              <Link href="/settings">
+              <Link href="/settings/account">
                 {user.picture && (
                   <img
                     alt="The user profile's picture"
