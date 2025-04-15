@@ -53,58 +53,60 @@ export function ModelPicker({
             isLoggedIn={isLoggedIn}
           />
         )}
-        {Object.entries(models).map(([key, model]) => (
-          <DropdownMenuItem
-            key={key}
-            disabled={model.requiresPro && isFreePlan(userPlan)}
-            className="flex items-start gap-2 py-2 cursor-pointer"
-            onClick={() => onSelectModel(key as LlmModel)}
-          >
-            <div className="mt-0.5">
-              <ModelIcon model={key as LlmModel} />
-            </div>
-            <div className="flex-grow">
-              <div className="font-medium">{model.name}</div>
-              <div className="text-sm text-muted-foreground">
-                {model.description}
+        {Object.entries(models)
+          .filter(([_key, model]) => model.allowInChat)
+          .map(([key, model]) => (
+            <DropdownMenuItem
+              key={key}
+              disabled={model.requiresPro && isFreePlan(userPlan)}
+              className="flex items-start gap-2 py-2 cursor-pointer"
+              onClick={() => onSelectModel(key as LlmModel)}
+            >
+              <div className="mt-0.5">
+                <ModelIcon model={key as LlmModel} />
               </div>
-            </div>
-            <div className="flex gap-2 w-18 flex-none items-center justify-end">
-              {model.allowSearch && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <Globe className="h-5 w-5" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
-                        This model supports searching the web.
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {model.allowReasoning && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div>
-                        <Brain className="h-5 w-5" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
-                        This model supports high reasoning.
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          </DropdownMenuItem>
-        ))}
+              <div className="flex-grow">
+                <div className="font-medium">{model.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {model.description}
+                </div>
+              </div>
+              <div className="flex gap-2 w-18 flex-none items-center justify-end">
+                {model.allowSearch && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Globe className="h-5 w-5" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
+                          This model supports searching the web.
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {model.allowReasoning && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div>
+                          <Brain className="h-5 w-5" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="p-2 bg-neutral-900 text-neutral-100 rounded-lg shadow-lg">
+                          This model supports high reasoning.
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            </DropdownMenuItem>
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

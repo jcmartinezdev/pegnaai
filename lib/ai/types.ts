@@ -48,6 +48,10 @@ export type ModelType = {
    * Whether the model counts towards your premium quota
    */
   isPremium: boolean;
+  /**
+   * Whether the model is available for chat
+   */
+  allowInChat: boolean;
 };
 
 export const models: Record<LlmModel, ModelType> = {
@@ -58,6 +62,7 @@ export const models: Record<LlmModel, ModelType> = {
     allowReasoning: true,
     requiresPro: false,
     isPremium: false,
+    allowInChat: true,
   },
   code: {
     name: "Code",
@@ -66,6 +71,7 @@ export const models: Record<LlmModel, ModelType> = {
     allowReasoning: true,
     requiresPro: true,
     isPremium: true,
+    allowInChat: true,
   },
   writer: {
     name: "Writer",
@@ -74,6 +80,7 @@ export const models: Record<LlmModel, ModelType> = {
     allowReasoning: false,
     requiresPro: true,
     isPremium: true,
+    allowInChat: false,
   },
 };
 
