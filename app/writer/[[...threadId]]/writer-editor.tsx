@@ -8,6 +8,8 @@ import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Button } from "@/components/ui/button";
+import hyperlinkExtension from "@/components/code-mirror/code-mirror-links-extension";
+import imageExtension from "@/components/code-mirror/code-mirror-image-extension";
 
 type WriterEditorProps = {
   isStreaming?: boolean;
@@ -121,6 +123,8 @@ const extensions = [
     },
   }),
   syntaxHighlighting(markdownHighlightStyle),
+  hyperlinkExtension(),
+  imageExtension(),
 ];
 
 function WriterEditor({
