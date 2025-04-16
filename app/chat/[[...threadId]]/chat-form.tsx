@@ -91,6 +91,7 @@ export default function ChatForm({
         title: "New Chat",
         model: data.model,
         modelParams: data.modelParams,
+        app: "chat",
       });
 
       saveThreadId = newThreadId;
