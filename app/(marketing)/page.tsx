@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import HeroSection from "./hero-section";
 import ProductCard from "./product-card";
-import { LlmModel, models } from "@/lib/chat/types";
+import { LlmModel, models } from "@/lib/ai/types";
 import ModelIcon from "@/components/model-icon";
 
 export default function Home() {
@@ -67,7 +67,7 @@ export default function Home() {
               <ProductCard
                 ProductIcon={Pen}
                 productName="Pegna Writer"
-                tag="Coming Soon"
+                tag="Available Now"
                 description="The world's first AI-first markdown writer. Engineered for performance, perfect first drafts, and lightning-fast edits."
                 characteristics={[
                   {
@@ -88,8 +88,8 @@ export default function Home() {
                   },
                 ]}
                 cta={{
-                  label: "Join the Waitlist",
-                  url: "/chat",
+                  label: "Try Pegna Writer Now",
+                  url: "/writer",
                   Icon: Pen,
                 }}
               />

@@ -10,16 +10,16 @@ import { Separator } from "@/components/ui/separator";
 import { AlertTriangle, Award, Check, CreditCard, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CustomerPortalButton from "./customer-portal-button";
-import { getProLimits, getUser } from "@/db/queries";
+import { getUser } from "@/db/queries";
 import { auth0 } from "@/lib/auth0";
 import { getPlanName, isFreePlan } from "@/lib/billing/account";
 import CheckoutButton from "./checkout-button";
 import Link from "next/link";
+import ProPlanFeatures from "@/components/pro-plan-features";
 
 export default async function SubscriptionPage() {
   const session = await auth0.getSession();
   const user = await getUser(session!.user.sub);
-  const proLimits = getProLimits();
 
   return (
     <div className="space-y-6">
@@ -58,50 +58,7 @@ export default async function SubscriptionPage() {
             ) : (
               <h4 className="mb-4 text-base font-medium">Plan Features</h4>
             )}
-            <ul className="space-y-3">
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>Access to all available AI models</span>
-              </li>
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>{proLimits.messagesLimit} messages per month</span>
-              </li>
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>
-                  {proLimits.premiumMessagesLimit} premium model messages per
-                  month
-                </span>
-              </li>
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>
-                  Access to advanced features like web search, high reasoning,
-                  and image generation.
-                </span>
-              </li>
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>Priority support</span>
-              </li>
-              <li className="flex items-center">
-                <div className="mr-3 rounded-full p-1">
-                  <Check className="h-4 w-4" />
-                </div>
-                <span>Advanced customization options</span>
-              </li>
-            </ul>
+            <ProPlanFeatures />
           </div>
           <Separator className="my-6" />
           <div>

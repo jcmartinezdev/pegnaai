@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { SubmitHandler, useForm, useWatch } from "react-hook-form";
-import { useChatRouter } from "@/lib/chat/chatRouter";
 import { Brain, Globe, Send } from "lucide-react";
 import { ModelPicker } from "./model-picker";
 import { FormField } from "@/components/ui/form";
@@ -8,13 +7,14 @@ import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipContent, TooltipTrigger } from "@radix-ui/react-tooltip";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { AskModel, LlmModel, ModelParams, models } from "@/lib/chat/types";
+import { AskModel, LlmModel, ModelParams, models } from "@/lib/ai/types";
 import { chatDB } from "@/lib/localDb";
 import { isFreePlan } from "@/lib/billing/account";
 import { Popover } from "@/components/ui/popover";
 import { PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import UnlockAllBanner from "./unlock-all-banner";
 import { TextareaAutosize } from "@/components/ui/textarea";
+import { useThreadRouter } from "@/components/thread-router";
 
 type Props = {
   threadId: string;
@@ -78,7 +78,7 @@ export default function ChatForm({
     }
   }, [defaultText, setValue, setFocus]);
 
-  const { navigateToChat } = useChatRouter();
+  const { navigateToThread } = useThreadRouter();
 
   const onSubmit: SubmitHandler<ChatFormInputs> = async (data) => {
     const modelParams = {};
@@ -94,7 +94,7 @@ export default function ChatForm({
       });
 
       saveThreadId = newThreadId;
-      navigateToChat(newThreadId);
+      navigateToThread(newThreadId);
     }
 
     // Save the user message to the DB

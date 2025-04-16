@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { notFound } from "next/navigation";
-import * as Sentry from "@sentry/nextjs";
 import MarkdownContent from "@/components/markdown-content";
 
 export const dynamicParams = false;
@@ -93,12 +92,7 @@ export default async function MarketingPage({
         </main>
       </div>
     );
-  } catch (error) {
-    Sentry.captureException(error);
-    console.error(
-      "Error reading file, this should have never happened:",
-      error,
-    );
+  } catch {
     notFound();
   }
 }

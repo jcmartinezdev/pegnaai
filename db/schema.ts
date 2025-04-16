@@ -69,6 +69,7 @@ export const threadsTable = pgTable(
     model: varchar("model", { length: 20 }).notNull(),
     modelParams: json("model_params").notNull(),
     pinned: boolean("pinned").default(false).notNull(),
+    document: text("document"),
     lastMessageAt: timestamp("last_message_at", {
       mode: "date",
       withTimezone: true,
@@ -82,6 +83,7 @@ export const threadsTable = pgTable(
       withTimezone: true,
     }).notNull(),
     status: varchar("status", { length: 20 }),
+    app: varchar("app", { length: 20 }),
   },
   (table) => [primaryKey({ columns: [table.userId, table.localId] })],
 );

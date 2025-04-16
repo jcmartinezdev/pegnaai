@@ -1,4 +1,4 @@
-import { LlmModel } from "@/lib/chat/types";
+import { LlmModel } from "@/lib/ai/types";
 import { ThreadModel } from "@/lib/localDb";
 import { faker } from "@faker-js/faker";
 
@@ -18,6 +18,7 @@ const createDefaultLocalThread = (): ThreadModel => {
     updatedAt: new Date(),
     status: "active",
     synced: 0,
+    app: "chat",
   };
 };
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { MessageSquare, Plus } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { chatDB } from "@/lib/localDb";
-import { useChatRouter } from "@/lib/chat/chatRouter";
 import {
   Sidebar,
   SidebarContent,
@@ -19,21 +18,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@auth0/nextjs-auth0/types";
 import Link from "next/link";
+import { useThreadRouter } from "./thread-router";
+import NewAppButton from "./new-app-button";
 
-type ChatSidebarProps = {
+type AppSidebarProps = {
   user?: User;
 };
 
-export default function ChatSidebar({ user }: ChatSidebarProps) {
-  const { threadId, navigateToChat } = useChatRouter();
+export default function AppSidebar({ user }: AppSidebarProps) {
+  const { threadId, currentApp, navigateToThread } = useThreadRouter();
   const { setOpenMobile } = useSidebar();
 
   const threads = useLiveQuery(() => {
-    return chatDB.getAllThreads();
-  });
+    return chatDB.getAllThreadsForApp(currentApp || "chat");
+  }, [currentApp]);
 
-  function switchToChat(threadId: string) {
-    navigateToChat(threadId);
+  function switchToThread(threadId: string) {
+    navigateToThread(threadId);
     setOpenMobile(false);
   }
 
@@ -42,12 +43,11 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
       <SidebarHeader className="flex py-2 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center w-full gap-2 px-3">
           <SidebarTrigger />
-          <h1>Pegna.ai</h1>
+          <Link href="/">
+            <h1>Pegna.ai</h1>
+          </Link>
         </div>
-        <Button className="w-full" onClick={() => switchToChat("")}>
-          New Chat
-          <Plus />
-        </Button>
+        <NewAppButton />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -55,7 +55,7 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
             {threads?.map((thread) => (
               <SidebarMenuItem key={thread.id} data-thread-id={thread.id}>
                 <SidebarMenuButton
-                  onClick={() => switchToChat(thread.id)}
+                  onClick={() => switchToThread(thread.id)}
                   isActive={thread.id === threadId}
                   className="w-full justify-start"
                 >
@@ -75,7 +75,7 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
               className="flex items-center justify-start w-full gap-x-4"
               asChild
             >
-              <Link href="/settings">
+              <Link href="/settings/account">
                 {user.picture && (
                   <img
                     alt="The user profile's picture"
@@ -88,7 +88,7 @@ export default function ChatSidebar({ user }: ChatSidebarProps) {
             </Button>
           ) : (
             <Button variant="ghost" asChild>
-              <Link href="/auth/login?returnTo=/chat">Log in</Link>
+              <Link href={`/auth/login?returnTo=/${currentApp}`}>Log in</Link>
             </Button>
           )}
         </div>
