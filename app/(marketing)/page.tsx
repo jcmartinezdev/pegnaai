@@ -67,7 +67,7 @@ export default function Home() {
               <ProductCard
                 ProductIcon={Pen}
                 productName="Pegna Writer"
-                tag="Coming Soon"
+                tag="Available Now"
                 description="The world's first AI-first markdown writer. Engineered for performance, perfect first drafts, and lightning-fast edits."
                 characteristics={[
                   {
@@ -88,8 +88,8 @@ export default function Home() {
                   },
                 ]}
                 cta={{
-                  label: "Join the Waitlist",
-                  url: "/chat",
+                  label: "Try Pegna Writer Now",
+                  url: "/writer",
                   Icon: Pen,
                 }}
               />

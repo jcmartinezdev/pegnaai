@@ -1,5 +1,8 @@
-import { memo, useMemo } from "react";
-import CodeMirror, { Statistics } from "@uiw/react-codemirror";
+import { memo, useEffect, useMemo, useRef } from "react";
+import CodeMirror, {
+  ReactCodeMirrorRef,
+  Statistics,
+} from "@uiw/react-codemirror";
 import CodeMirrorMerge from "react-codemirror-merge";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
@@ -10,6 +13,7 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Button } from "@/components/ui/button";
 import hyperlinkExtension from "@/components/code-mirror/code-mirror-links-extension";
 import imageExtension from "@/components/code-mirror/code-mirror-image-extension";
+import WriterEditorToolbar from "./writer-editor-toolbar";
 
 type WriterEditorProps = {
   isStreaming?: boolean;
@@ -139,8 +143,10 @@ function WriterEditor({
   onStatsChange,
 }: WriterEditorProps) {
   const debouncedHandleEditorChange = useDebouncedCallback(onChange, 500);
+  const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const memoizedEditor = useMemo(() => {
+    console.log("Rendering WriterEditor");
     if (proposedDiff && proposedDiff.length > 0 && proposedDiff !== document) {
       return (
         <>
@@ -204,20 +210,26 @@ function WriterEditor({
       );
     }
     return (
-      <CodeMirror
-        value={document}
-        onChange={debouncedHandleEditorChange}
-        className="text-lg"
-        basicSetup={{
-          lineNumbers: false,
-          foldGutter: false,
-          highlightSelectionMatches: false,
-        }}
-        readOnly={isStreaming || readOnly}
-        height="100%"
-        extensions={extensions}
-        onStatistics={onStatsChange}
-      />
+      <>
+        <WriterEditorToolbar view={editorRef.current?.view} />
+        <div className="overflow-y-auto mt-2 pb-48 md:pb-32">
+          <CodeMirror
+            ref={editorRef}
+            value={document}
+            onChange={debouncedHandleEditorChange}
+            className="text-lg"
+            basicSetup={{
+              lineNumbers: false,
+              foldGutter: false,
+              highlightSelectionMatches: false,
+            }}
+            readOnly={isStreaming || readOnly}
+            height="100%"
+            extensions={extensions}
+            onStatistics={onStatsChange}
+          />
+        </div>
+      </>
     );
   }, [
     onStatsChange,
@@ -227,9 +239,10 @@ function WriterEditor({
     debouncedHandleEditorChange,
     onRejectProposal,
     isStreaming,
+    editorRef.current,
   ]);
 
   return memoizedEditor;
 }
 
-export default memo(WriterEditor);
+export default WriterEditor;

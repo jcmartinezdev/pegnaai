@@ -43,7 +43,9 @@ export default function AppSidebar({ user }: AppSidebarProps) {
       <SidebarHeader className="flex py-2 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center w-full gap-2 px-3">
           <SidebarTrigger />
-          <h1>Pegna.ai</h1>
+          <Link href="/">
+            <h1>Pegna.ai</h1>
+          </Link>
         </div>
         <NewAppButton />
       </SidebarHeader>

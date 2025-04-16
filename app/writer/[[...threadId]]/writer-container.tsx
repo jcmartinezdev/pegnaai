@@ -158,71 +158,69 @@ export default function WriterContainer() {
       <div className="relative flex w-full flex-1 flex-col overflow-hidden">
         {threadId ? (
           <>
-            <div className="overflow-y-auto pt-4 md:pt-8 pb-48 md:pb-32">
-              {thread?.repurposeDocument ? (
-                <div className="pt-12">
-                  <WriterEditor
-                    isStreaming={isStreaming}
-                    document={thread?.repurposeDocument || ""}
-                    onChange={() => {}}
-                    readOnly={true}
-                  />
-                  <div className="absolute top-0 w-full">
-                    <div className="flex items-center justify-between p-2 border bg-muted">
-                      <span>
-                        Repurposing document to:&nbsp;
-                        {documentTypes[repurposeDocumentType].name}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="destructive"
-                          disabled={isStreaming}
-                          onClick={onRejectRepurpose}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          disabled={isStreaming}
-                          onClick={() => onAcceptRepurpose(thread)}
-                        >
-                          Save as new document
-                        </Button>
-                      </div>
+            {thread?.repurposeDocument ? (
+              <div className="pt-12">
+                <WriterEditor
+                  isStreaming={isStreaming}
+                  document={thread?.repurposeDocument || ""}
+                  onChange={() => {}}
+                  readOnly={true}
+                />
+                <div className="absolute top-0 w-full">
+                  <div className="flex items-center justify-between p-2 border bg-muted">
+                    <span>
+                      Repurposing document to:&nbsp;
+                      {documentTypes[repurposeDocumentType].name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="destructive"
+                        disabled={isStreaming}
+                        onClick={onRejectRepurpose}
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        disabled={isStreaming}
+                        onClick={() => onAcceptRepurpose(thread)}
+                      >
+                        Save as new document
+                      </Button>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  {remainingLimits === 0 && (
+              </div>
+            ) : (
+              <>
+                {remainingLimits === 0 && (
+                  <ChatLimitBanner
+                    isLoggedIn={true}
+                    message="You've reached the message limit."
+                  />
+                )}
+                {remainingLimits !== undefined &&
+                  remainingLimits <= 10 &&
+                  remainingLimits > 0 && (
                     <ChatLimitBanner
                       isLoggedIn={true}
-                      message="You've reached the message limit."
+                      message={`You've ${remainingLimits} messages left.`}
                     />
                   )}
-                  {remainingLimits !== undefined &&
-                    remainingLimits <= 10 &&
-                    remainingLimits > 0 && (
-                      <ChatLimitBanner
-                        isLoggedIn={true}
-                        message={`You've ${remainingLimits} messages left.`}
-                      />
-                    )}
-                  <WriterEditor
-                    isStreaming={isStreaming}
-                    document={thread?.document || ""}
-                    proposedDiff={thread?.documentProposedDiff}
-                    onChange={onEditorChange}
-                    onRejectProposal={onRejectProposal}
-                    onStatsChange={onEditorStatsChange}
-                  />
-                  <WriterUpdateDocumentForm
-                    selectionRange={selectionRange}
-                    isStreaming={isStreaming}
-                    onGenerateText={onGenerateText}
-                  />
-                </>
-              )}
-            </div>
+                <WriterEditor
+                  isStreaming={isStreaming}
+                  document={document || ""}
+                  proposedDiff={thread?.documentProposedDiff}
+                  onChange={onEditorChange}
+                  onRejectProposal={onRejectProposal}
+                  onStatsChange={onEditorStatsChange}
+                />
+                <WriterUpdateDocumentForm
+                  selectionRange={selectionRange}
+                  isStreaming={isStreaming}
+                  onGenerateText={onGenerateText}
+                />
+              </>
+            )}
           </>
         ) : (
           <WriterNewDocumentForm
