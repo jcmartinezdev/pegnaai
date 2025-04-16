@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import CodeMirror, {
   ReactCodeMirrorRef,
   Statistics,

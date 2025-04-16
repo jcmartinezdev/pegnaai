@@ -8,7 +8,7 @@ import {
   Heading2,
   Heading3,
   Heading4,
-  Image,
+  ImageIcon,
   Italic,
   Link,
   Quote,
@@ -140,19 +140,27 @@ function toggleLineMarker(view: EditorView, marker: string) {
 
 export default function WriterEditorToolbar(props: WriterEditorToolbarProps) {
   function bold() {
-    props.view && toggleWrapSelection(props.view, "**");
+    if (props.view) {
+      toggleWrapSelection(props.view, "**");
+    }
   }
 
   function italic() {
-    props.view && toggleWrapSelection(props.view, "*");
+    if (props.view) {
+      toggleWrapSelection(props.view, "*");
+    }
   }
 
   function lineMarker(marker: string) {
-    props.view && toggleLineMarker(props.view, marker);
+    if (props.view) {
+      toggleLineMarker(props.view, marker);
+    }
   }
 
   function link(startsWith: string) {
-    props.view && toggleLink(props.view, startsWith);
+    if (props.view) {
+      toggleLink(props.view, startsWith);
+    }
   }
 
   return (
@@ -185,7 +193,7 @@ export default function WriterEditorToolbar(props: WriterEditorToolbarProps) {
         <Link />
       </Button>
       <Button size="icon" variant="ghost" onClick={() => link("![")}>
-        <Image />
+        <ImageIcon />
       </Button>
     </div>
   );
