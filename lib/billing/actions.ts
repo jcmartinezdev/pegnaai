@@ -55,6 +55,7 @@ export async function startCheckoutFlow({
     client_reference_id: session.user.sub,
     success_url: successUrl.href,
     cancel_url: cancelUrl.href,
+    allow_promotion_codes: true,
   });
 
   if (!checkoutSession.url) {
