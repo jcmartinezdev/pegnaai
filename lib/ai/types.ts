@@ -204,6 +204,9 @@ export type CustomMetadataType =
   | {
       type: "document-diff-delta";
       delta: string;
+    }
+  | {
+      type: "document-diff-completed";
     };
 
 export interface FinishedStreamType {

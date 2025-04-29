@@ -125,6 +125,10 @@ export async function POST(req: Request) {
               delta: document.slice(selectionRange.to, document.length),
             });
           }
+
+          dataStream.writeData({
+            type: "document-diff-completed",
+          });
         },
       });
 
@@ -141,10 +145,7 @@ export async function POST(req: Request) {
             });
           } else {
             dataStream.writeData({
-              type:
-                document.length === 0
-                  ? "document-delta"
-                  : "document-diff-delta",
+              type: "document-diff-delta",
               delta: textDelta,
             });
           }
