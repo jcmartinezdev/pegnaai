@@ -146,11 +146,10 @@ function WriterEditor({
   const editorRef = useRef<ReactCodeMirrorRef>(null);
 
   const memoizedEditor = useMemo(() => {
-    console.log("Rendering WriterEditor");
     if (proposedDiff && proposedDiff.length > 0 && proposedDiff !== document) {
       return (
         <>
-          <div className="flex w-full items-stretch border-b mb-2 pb-2">
+          <div className="w-full mt-4 md:mt-8 p-2 border border-sidebar-border flex items-center rounded-md">
             <div className="flex-grow">
               <div className="mx-auto max-w-5xl text-xl flex justify-between items-center">
                 Original
@@ -178,34 +177,36 @@ function WriterEditor({
               </div>
             </div>
           </div>
-          <CodeMirrorMerge
-            className="text-lg"
-            gutter={true}
-            revertControls="b-to-a"
-            destroyRerender={false}
-          >
-            <CodeMirrorMerge.Original
-              basicSetup={{
-                lineNumbers: false,
-                foldGutter: false,
-                highlightSelectionMatches: false,
-              }}
-              onChange={debouncedHandleEditorChange}
-              readOnly={isStreaming}
-              value={document}
-              extensions={extensions}
-            />
-            <CodeMirrorMerge.Modified
-              basicSetup={{
-                lineNumbers: false,
-                foldGutter: false,
-                highlightSelectionMatches: false,
-              }}
-              readOnly={true}
-              value={proposedDiff}
-              extensions={extensions}
-            />
-          </CodeMirrorMerge>
+          <div className="overflow-y-auto mt-2 pb-48 md:pb-32">
+            <CodeMirrorMerge
+              className="text-lg"
+              gutter={true}
+              revertControls="b-to-a"
+              destroyRerender={false}
+            >
+              <CodeMirrorMerge.Original
+                basicSetup={{
+                  lineNumbers: false,
+                  foldGutter: false,
+                  highlightSelectionMatches: false,
+                }}
+                onChange={debouncedHandleEditorChange}
+                readOnly={isStreaming}
+                value={document}
+                extensions={extensions}
+              />
+              <CodeMirrorMerge.Modified
+                basicSetup={{
+                  lineNumbers: false,
+                  foldGutter: false,
+                  highlightSelectionMatches: false,
+                }}
+                readOnly={true}
+                value={proposedDiff}
+                extensions={extensions}
+              />
+            </CodeMirrorMerge>
+          </div>
         </>
       );
     }

@@ -259,6 +259,8 @@ async function processPegnaAIStream(
                       await chatDB.threads.update(threadId, {
                         document: ct?.documentProposedDiff,
                         documentProposedDiff: "",
+                        synced: 0,
+                        updatedAt: new Date(),
                       });
                     }
                     break;
