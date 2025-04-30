@@ -253,6 +253,18 @@ async function processPegnaAIStream(
                       updatedAt: new Date(),
                     });
                     break;
+                  case "document-diff-completed":
+                    const ct = await chatDB.threads.get(threadId);
+                    if (!ct?.document || ct.document.length === 0) {
+                      await chatDB.threads.update(threadId, {
+                        document: ct?.documentProposedDiff,
+                        documentProposedDiff: "",
+                        synced: 0,
+                        updatedAt: new Date(),
+                      });
+                    }
+                    break;
+
                   case "document-rep-delta":
                     await chatDB.threads.update(threadId, {
                       repurposeDocument:

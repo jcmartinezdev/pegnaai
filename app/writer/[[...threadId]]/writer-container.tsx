@@ -143,7 +143,7 @@ export default function WriterContainer() {
   // Whenever the thread changes, we need to clear the document
   useEffect(() => {
     setDocument(undefined);
-  }, [threadId]);
+  }, [threadId, thread?.id]);
 
   useEffect(() => {
     // Only load the document data the first time
@@ -208,8 +208,16 @@ export default function WriterContainer() {
                   )}
                 <WriterEditor
                   isStreaming={isStreaming}
-                  document={document || ""}
-                  proposedDiff={thread?.documentProposedDiff}
+                  document={
+                    ((document || "").length > 0
+                      ? document
+                      : thread?.documentProposedDiff) || ""
+                  }
+                  proposedDiff={
+                    (document || "").length > 0
+                      ? thread?.documentProposedDiff
+                      : undefined
+                  }
                   onChange={onEditorChange}
                   onRejectProposal={onRejectProposal}
                   onStatsChange={onEditorStatsChange}

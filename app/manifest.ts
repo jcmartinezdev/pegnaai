@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Pegna AI",
-    short_name: "pegna ai",
+    short_name: "Pegna AI",
     description: "The best chatbot in the world.",
     start_url: "/chat",
     display: "standalone",
