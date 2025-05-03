@@ -10,6 +10,7 @@ import {
 import { buildWriterSystemPrompt, generateThreadTitle } from "@/lib/ai/agent";
 import { validateRateLimits } from "@/lib/billing/rate-limits";
 import { google } from "@ai-sdk/google";
+import { startSpan } from "@sentry/nextjs";
 
 const askModelSchema = z.object({
   threadId: z.string(),
@@ -34,131 +35,141 @@ const askModelSchema = z.object({
 }) satisfies z.ZodType<WriterModel>;
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { success, data, error } = askModelSchema.safeParse(body);
-  if (!success) {
-    console.log("Error parsing request", error);
-    return new Response(
-      JSON.stringify({ message: "Invalid request", type: "invalid_request" }),
-      { status: 400 },
-    );
-  }
-  const {
-    generateTitle,
-    prompt,
-    document,
-    modelParams,
-    selectionRange,
-    repurpose,
-  } = data;
-
-  let remainingMessages = 0;
-  let remainingPremiumMessages = 0;
-  try {
-    const result = await validateRateLimits(models["writer"], {});
-    remainingMessages = result.remainingMessages;
-    remainingPremiumMessages = result.remainingPremiumMessages;
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: error,
-        type: "rate_limit",
-      }),
-      { status: 429 },
-    );
-  }
-
-  const systemPrompt = await buildWriterSystemPrompt(
-    document,
-    modelParams,
-    selectionRange,
-  );
-
-  /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-  const pendingPromises: Promise<any>[] = [];
-
-  return createDataStreamResponse({
-    execute: async (dataStream) => {
-      dataStream.writeData({
-        type: "document-clear",
-      });
-      if (generateTitle) {
-        // Generate the chat title
-        pendingPromises.push(
-          generateThreadTitle(prompt).then((title) => {
-            dataStream.writeData({
-              type: "thread-metadata",
-              generatedTitle: title,
-            });
+  return startSpan(
+    {
+      name: "writer-api",
+    },
+    async () => {
+      const body = await req.json();
+      const { success, data, error } = askModelSchema.safeParse(body);
+      if (!success) {
+        console.log("Error parsing request", error);
+        return new Response(
+          JSON.stringify({
+            message: "Invalid request",
+            type: "invalid_request",
           }),
+          { status: 400 },
+        );
+      }
+      const {
+        generateTitle,
+        prompt,
+        document,
+        modelParams,
+        selectionRange,
+        repurpose,
+      } = data;
+
+      let remainingMessages = 0;
+      let remainingPremiumMessages = 0;
+      try {
+        const result = await validateRateLimits(models["writer"], {});
+        remainingMessages = result.remainingMessages;
+        remainingPremiumMessages = result.remainingPremiumMessages;
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            message: error,
+            type: "rate_limit",
+          }),
+          { status: 429 },
         );
       }
 
-      if (remainingPremiumMessages < 10 || remainingMessages < 10) {
-        dataStream.writeData({
-          type: "rate-limit",
-          value: {
-            remainingMessages,
-            remainingPremiumMessages,
-          },
-        });
-      }
+      const systemPrompt = await buildWriterSystemPrompt(
+        document,
+        modelParams,
+        selectionRange,
+      );
 
-      if (selectionRange) {
-        dataStream.writeData({
-          type: "document-diff-delta",
-          delta: document.slice(0, selectionRange.from),
-        });
-      }
+      /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+      const pendingPromises: Promise<any>[] = [];
 
-      const result = streamText({
-        model: google("gemini-2.0-flash"),
-        system: systemPrompt,
-        prompt: prompt,
-        maxTokens: 1_000_000,
-        onFinish: async () => {
-          await Promise.all(pendingPromises);
+      return createDataStreamResponse({
+        execute: async (dataStream) => {
+          dataStream.writeData({
+            type: "document-clear",
+          });
+          if (generateTitle) {
+            // Generate the chat title
+            pendingPromises.push(
+              generateThreadTitle(prompt).then((title) => {
+                dataStream.writeData({
+                  type: "thread-metadata",
+                  generatedTitle: title,
+                });
+              }),
+            );
+          }
+
+          if (remainingPremiumMessages < 10 || remainingMessages < 10) {
+            dataStream.writeData({
+              type: "rate-limit",
+              value: {
+                remainingMessages,
+                remainingPremiumMessages,
+              },
+            });
+          }
 
           if (selectionRange) {
             dataStream.writeData({
               type: "document-diff-delta",
-              delta: document.slice(selectionRange.to, document.length),
+              delta: document.slice(0, selectionRange.from),
             });
           }
 
-          dataStream.writeData({
-            type: "document-diff-completed",
+          const result = streamText({
+            model: google("gemini-2.0-flash"),
+            system: systemPrompt,
+            prompt: prompt,
+            maxTokens: 1_000_000,
+            onFinish: async () => {
+              await Promise.all(pendingPromises);
+
+              if (selectionRange) {
+                dataStream.writeData({
+                  type: "document-diff-delta",
+                  delta: document.slice(selectionRange.to, document.length),
+                });
+              }
+
+              dataStream.writeData({
+                type: "document-diff-completed",
+              });
+            },
+          });
+
+          for await (const delta of result.fullStream) {
+            const { type } = delta;
+
+            if (type === "text-delta") {
+              const { textDelta } = delta;
+
+              if (repurpose) {
+                dataStream.writeData({
+                  type: "document-rep-delta",
+                  delta: textDelta,
+                });
+              } else {
+                dataStream.writeData({
+                  type: "document-diff-delta",
+                  delta: textDelta,
+                });
+              }
+            }
+          }
+
+          result.mergeIntoDataStream(dataStream, {
+            sendReasoning: true,
           });
         },
-      });
-
-      for await (const delta of result.fullStream) {
-        const { type } = delta;
-
-        if (type === "text-delta") {
-          const { textDelta } = delta;
-
-          if (repurpose) {
-            dataStream.writeData({
-              type: "document-rep-delta",
-              delta: textDelta,
-            });
-          } else {
-            dataStream.writeData({
-              type: "document-diff-delta",
-              delta: textDelta,
-            });
-          }
-        }
-      }
-
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
+        onError: (error) => {
+          console.log("Error", error);
+          return "There was an error with the request";
+        },
       });
     },
-    onError: (error) => {
-      console.log("Error", error);
-      return "There was an error with the request";
-    },
-  });
+  );
 }

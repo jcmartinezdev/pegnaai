@@ -17,6 +17,7 @@ import { isFreePlan } from "@/lib/billing/account";
 import { buildSystemPrompt, generateThreadTitle } from "@/lib/ai/agent";
 import createGenerateImageTool from "@/lib/ai/tools/generateImage";
 import { validateRateLimits } from "@/lib/billing/rate-limits";
+import { startSpan } from "@sentry/nextjs";
 
 type ModelSelectorItem = {
   provider: "google" | "openai" | "anthropic";
@@ -126,127 +127,148 @@ const askModelSchema = z.object({
 }) satisfies z.ZodType<AskModel>;
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { success, data } = askModelSchema.safeParse(body);
-  if (!success) {
-    return new Response(
-      JSON.stringify({ message: "Invalid request", type: "invalid_request" }),
-      { status: 400 },
-    );
-  }
-  const { model, modelParams, messages, generateTitle } = data;
-
-  const session = await auth0.getSession();
-  const user = await getUser(session?.user.sub || "unknown");
-
-  const currentModel = models[model];
-
-  let remainingMessages = 0;
-  let remainingPremiumMessages = 0;
-  try {
-    const result = await validateRateLimits(currentModel, modelParams);
-    remainingMessages = result.remainingMessages;
-    remainingPremiumMessages = result.remainingPremiumMessages;
-  } catch (error) {
-    return new Response(
-      JSON.stringify({
-        message: error,
-        type: "rate_limit",
-      }),
-      { status: 429 },
-    );
-  }
-
-  const systemPrompt = await buildSystemPrompt(
-    session?.user.sub,
-    session?.user.name,
-    user?.planName,
-  );
-
-  /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
-  const pendingPromises: Promise<any>[] = [];
-
-  return createDataStreamResponse({
-    execute: (dataStream) => {
-      if (generateTitle) {
-        // Generate the chat title
-        pendingPromises.push(
-          generateThreadTitle(messages[0].content).then((title) => {
-            dataStream.writeData({
-              type: "thread-metadata",
-              generatedTitle: title,
-            });
+  return startSpan(
+    {
+      name: "chat-route",
+    },
+    async () => {
+      const body = await req.json();
+      const { success, data } = askModelSchema.safeParse(body);
+      if (!success) {
+        return new Response(
+          JSON.stringify({
+            message: "Invalid request",
+            type: "invalid_request",
           }),
+          { status: 400 },
+        );
+      }
+      const { model, modelParams, messages, generateTitle } = data;
+
+      const session = await auth0.getSession();
+      const user = await getUser(session?.user.sub || "unknown");
+
+      const currentModel = models[model];
+
+      let remainingMessages = 0;
+      let remainingPremiumMessages = 0;
+      try {
+        const result = await validateRateLimits(currentModel, modelParams);
+        remainingMessages = result.remainingMessages;
+        remainingPremiumMessages = result.remainingPremiumMessages;
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            message: error,
+            type: "rate_limit",
+          }),
+          { status: 429 },
         );
       }
 
-      if (remainingPremiumMessages < 10 || remainingMessages < 10) {
-        dataStream.writeData({
-          type: "rate-limit",
-          value: {
-            remainingMessages,
-            remainingPremiumMessages,
-          },
-        });
-      }
+      const systemPrompt = await buildSystemPrompt(
+        session?.user.sub,
+        session?.user.name,
+        user?.planName,
+      );
 
-      const tools: Record<string, Tool> = {};
-      if (!isFreePlan(user?.planName)) {
-        tools.generateImage = createGenerateImageTool(
-          dataStream,
-          session?.user.sub,
-        );
-      }
+      /*eslint-disable-next-line @typescript-eslint/no-explicit-any*/
+      const pendingPromises: Promise<any>[] = [];
 
-      const result = streamText({
-        ...getModel(model, modelParams),
-        system: systemPrompt,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
-        tools,
-        onFinish: async ({ providerMetadata }) => {
-          await Promise.all(pendingPromises);
-          // Process provider metadata
-          const googleMetadata = providerMetadata?.google as
-            | GoogleGenerativeAIProviderMetadata
-            | undefined;
-
-          if (googleMetadata) {
-            if (
-              googleMetadata.groundingMetadata &&
-              googleMetadata.groundingMetadata.groundingSupports
-            ) {
-              const searchMetadata: SearchMetadata[] =
-                googleMetadata.groundingMetadata.groundingSupports.map((gs) => {
-                  const gc =
-                    googleMetadata.groundingMetadata?.groundingChunks?.[
-                      gs.groundingChunkIndices?.[0] || 0
-                    ];
-                  return {
-                    confidenceScore: gs.confidenceScores?.[0] || undefined,
-                    source: (gc?.web || gc?.retrievedContext || undefined) && {
-                      url: gc?.web?.uri || gc?.retrievedContext?.uri || "",
-                      title:
-                        gc?.web?.title || gc?.retrievedContext?.title || "",
-                    },
-                    snippet: gs.segment?.text || "",
-                  };
+      return createDataStreamResponse({
+        execute: (dataStream) => {
+          if (generateTitle) {
+            // Generate the chat title
+            pendingPromises.push(
+              generateThreadTitle(messages[0].content).then((title) => {
+                dataStream.writeData({
+                  type: "thread-metadata",
+                  generatedTitle: title,
                 });
-              dataStream.writeData({
-                type: "search-metadata",
-                value: searchMetadata,
-              });
-            }
+              }),
+            );
           }
+
+          if (remainingPremiumMessages < 10 || remainingMessages < 10) {
+            dataStream.writeData({
+              type: "rate-limit",
+              value: {
+                remainingMessages,
+                remainingPremiumMessages,
+              },
+            });
+          }
+
+          const tools: Record<string, Tool> = {};
+          if (!isFreePlan(user?.planName)) {
+            tools.generateImage = createGenerateImageTool(
+              dataStream,
+              session?.user.sub,
+            );
+          }
+
+          const result = streamText({
+            ...getModel(model, modelParams),
+            system: systemPrompt,
+            messages: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            tools,
+            onFinish: async ({ providerMetadata }) => {
+              await Promise.all(pendingPromises);
+              // Process provider metadata
+              const googleMetadata = providerMetadata?.google as
+                | GoogleGenerativeAIProviderMetadata
+                | undefined;
+
+              if (googleMetadata) {
+                if (
+                  googleMetadata.groundingMetadata &&
+                  googleMetadata.groundingMetadata.groundingSupports
+                ) {
+                  const searchMetadata: SearchMetadata[] =
+                    googleMetadata.groundingMetadata.groundingSupports.map(
+                      (gs) => {
+                        const gc =
+                          googleMetadata.groundingMetadata?.groundingChunks?.[
+                            gs.groundingChunkIndices?.[0] || 0
+                          ];
+                        return {
+                          confidenceScore:
+                            gs.confidenceScores?.[0] || undefined,
+                          source: (gc?.web ||
+                            gc?.retrievedContext ||
+                            undefined) && {
+                            url:
+                              gc?.web?.uri || gc?.retrievedContext?.uri || "",
+                            title:
+                              gc?.web?.title ||
+                              gc?.retrievedContext?.title ||
+                              "",
+                          },
+                          snippet: gs.segment?.text || "",
+                        };
+                      },
+                    );
+                  dataStream.writeData({
+                    type: "search-metadata",
+                    value: searchMetadata,
+                  });
+                }
+              }
+            },
+          });
+
+          result.mergeIntoDataStream(dataStream, {
+            sendReasoning: true,
+          });
+        },
+        onError: (error) => {
+          console.log("Error", error);
+          return "There was an error with the request";
         },
       });
-
-      result.mergeIntoDataStream(dataStream, {
-        sendReasoning: true,
-      });
     },
-    onError: (error) => {
-      console.log("Error", error);
-      return "There was an error with the request";
-    },
-  });
+  );
 }
