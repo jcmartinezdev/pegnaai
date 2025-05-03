@@ -19,8 +19,8 @@ export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "goto-lcs-ug",
-  project: "pegna-ai-web",
+  org: "goto-lcs",
+  project: "pegnaai-web",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -46,4 +46,3 @@ export default withSentryConfig(nextConfig, {
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
 });
-
