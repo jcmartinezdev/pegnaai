@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ Pegna.ai — Open Source, Lightning-Fast Multi-LLM Chatbot Platform
 
-## Getting Started
+Pegna.ai is an **open-source, blazing-fast chatbot and AI tool suite** built for the modern web. It gives you seamless access to multiple LLMs through a beautiful, performant interface — whether you're writing markdown with AI or chatting with your favorite model.
 
-First, run the development server:
+## ✨ Features
+
+### 🧠 Pegna Chat
+Talk to AI like never before. Pegna Chat is our lightning-fast chatbot UI that supports **multiple LLMs** out of the box.
+
+- ⚡ Ultra-fast (50ms average response time)
+- 🧩 Plug-and-play support for models like OpenAI, Anthropic, Mistral, and more
+- 🌐 Intuitive web interface that works on any device
+- 🛡️ Open-source and privacy-friendly
+
+### ✍️ Pegna Writer
+Write better, faster. Pegna Writer is the **AI-first markdown editor** designed for people who move fast.
+
+- ✨ Perfect first drafts, instant edits
+- 🧠 AI-enhanced markdown writing
+- 🚀 Built for speed and simplicity
+- 💾 Works offline with your own data
+
+## 🚀 Why Pegna?
+
+- **Multi-LLM Support**: Easily swap and experiment with different language models.
+- **Open Source**: MIT licensed, transparent, and customizable.
+- **Speed-Obsessed**: From 50ms response times to ultra-optimized UI, it's built for performance.
+- **User-Friendly**: Clean, modern design with zero setup friction.
+- **Built with modern stack**: React + Tailwind + TypeScript.
+
+## 🛠️ Getting Started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Clone the repo
+git clone https://github.com/yourname/pegna-ai.git
+cd pegna-ai
+
+# Install dependencies
+pnpm install
+
+# Set up environment variabled from .env.example file
+cp .env.example .env.local
+
+# Start the dev server
 pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
